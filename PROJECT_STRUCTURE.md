@@ -1,7 +1,7 @@
-# GCPHound Project Structure
+# EscaGCP Project Structure
 
 ## Overview
-This document describes the organization and structure of the GCPHound project.
+This document describes the organization and structure of the EscaGCP project.
 
 ## Directory Structure
 
@@ -110,7 +110,7 @@ These directories are created during execution:
 
 1. Install in development mode: `pip install -e .`
 2. Run tests: `pytest`
-3. Check coverage: `pytest --cov=gcphound`
+3. Check coverage: `pytest --cov=escagcp`
 4. Format code: Follow PEP 8 guidelines
 
 ## Maintenance Notes

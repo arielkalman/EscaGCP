@@ -1,5 +1,5 @@
 """
-Utility modules for GCPHound
+Utility modules for EscaGCP
 """
 
 from .auth import AuthManager

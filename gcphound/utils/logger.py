@@ -1,5 +1,5 @@
 """
-Logging utilities for GCPHound
+Logging utilities for EscaGCP
 """
 
 import logging

@@ -1,10 +1,10 @@
-# GCPHound Example Reports
+# EscaGCP Example Reports
 
-This directory contains example report outputs from GCPHound.
+This directory contains example report outputs from EscaGCP.
 
 ## Important Note
 
-When running GCPHound on your own GCP environment, the generated reports will contain sensitive information including:
+When running EscaGCP on your own GCP environment, the generated reports will contain sensitive information including:
 - Project IDs and names
 - Service account emails
 - User emails
@@ -19,13 +19,13 @@ To generate example reports for your environment:
 
 ```bash
 # Generate a full interactive report
-gcphound visualize --graph graph/gcphound_graph_*.json --output example_report.html
+escagcp visualize --graph graph/escagcp_graph_*.json --output example_report.html
 
 # Generate a simple standalone report
-gcphound simple-export --graph graph/gcphound_graph_*.json --output simple_report.html
+escagcp simple-export --graph graph/escagcp_graph_*.json --output simple_report.html
 
 # Generate a shareable report
-gcphound export --graph graph/gcphound_graph_*.json --output shareable_report.html
+escagcp export --graph graph/escagcp_graph_*.json --output shareable_report.html
 ```
 
 ## Report Types

@@ -1,9 +1,9 @@
 """
-GCPHound - Map GCP IAM relationships and discover attack paths
+EscaGCP - Map GCP IAM relationships and discover attack paths
 """
 
 __version__ = "0.1.0"
-__author__ = "GCPHound Team"
+__author__ = "Ariel Kalman"
 
 from .utils import Config, AuthManager, get_logger
 from .collectors import CollectionOrchestrator

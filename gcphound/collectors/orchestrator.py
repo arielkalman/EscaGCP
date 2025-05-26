@@ -65,7 +65,7 @@ class CollectionOrchestrator:
             Dictionary containing all collected data
         """
         self._metadata['start_time'] = datetime.now().isoformat()
-        logger.info("Starting GCPHound data collection")
+        logger.info("Starting EscaGCP data collection")
         
         try:
             # Step 1: Collect hierarchy to discover projects
@@ -177,7 +177,7 @@ class CollectionOrchestrator:
         ).total_seconds()
         self._metadata['duration_seconds'] = duration
         
-        logger.info(f"Completed GCPHound data collection in {duration:.2f} seconds")
+        logger.info(f"Completed EscaGCP data collection in {duration:.2f} seconds")
         
         return {
             'metadata': self._metadata,
@@ -205,7 +205,7 @@ class CollectionOrchestrator:
         Returns:
             Dictionary containing collected data and changes
         """
-        logger.info("Starting incremental GCPHound data collection")
+        logger.info("Starting incremental EscaGCP data collection")
         
         # Load previous data
         previous_data = self._load_previous_data(previous_data_path)
@@ -279,20 +279,20 @@ class CollectionOrchestrator:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
         # Save complete data
-        complete_file = output_path / f"gcphound_complete_{timestamp}.json"
+        complete_file = output_path / f"escagcp_complete_{timestamp}.json"
         logger.info(f"Saving complete data to: {complete_file}")
         with open(complete_file, 'w') as f:
             json.dump(data, f, indent=2, default=str)
         
         # Save individual collector outputs
         for collector_name, collector_data in self._collected_data.items():
-            collector_file = output_path / f"gcphound_{collector_name}_{timestamp}.json"
+            collector_file = output_path / f"escagcp_{collector_name}_{timestamp}.json"
             logger.info(f"Saving {collector_name} data to: {collector_file}")
             with open(collector_file, 'w') as f:
                 json.dump(collector_data, f, indent=2, default=str)
         
         # Save metadata separately
-        metadata_file = output_path / f"gcphound_metadata_{timestamp}.json"
+        metadata_file = output_path / f"escagcp_metadata_{timestamp}.json"
         with open(metadata_file, 'w') as f:
             json.dump(self._metadata, f, indent=2, default=str)
         
@@ -427,7 +427,7 @@ class CollectionOrchestrator:
         output_path = Path(output_dir)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        changes_file = output_path / f"gcphound_changes_{timestamp}.json"
+        changes_file = output_path / f"escagcp_changes_{timestamp}.json"
         logger.info(f"Saving changes to: {changes_file}")
         
         with open(changes_file, 'w') as f:

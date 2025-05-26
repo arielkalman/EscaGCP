@@ -1,6 +1,6 @@
-# GCPHound Security Checklist
+# EscaGCP Security Checklist
 
-Before sharing or publishing any GCPHound outputs, please review this checklist:
+Before sharing or publishing any EscaGCP outputs, please review this checklist:
 
 ## Pre-Publication Checklist
 
@@ -27,7 +27,7 @@ Before sharing or publishing any GCPHound outputs, please review this checklist:
 ### 4. Use the Cleanup Command
 Run the cleanup command to remove all generated data:
 ```bash
-gcphound cleanup --force
+escagcp cleanup --force
 ```
 
 ### 5. Git Repository Check
@@ -53,7 +53,7 @@ If you must share reports:
 
 ## What Gets Collected
 
-GCPHound collects and stores:
+EscaGCP collects and stores:
 - Project IDs and numbers
 - Organization and folder IDs
 - Service account emails

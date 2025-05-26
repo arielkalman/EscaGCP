@@ -1,5 +1,5 @@
 """
-Visualization modules for GCPHound
+Visualization modules for EscaGCP
 """
 
 from .html import HTMLVisualizer

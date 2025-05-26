@@ -1,5 +1,5 @@
 """
-Command-line interface for GCPHound
+Command-line interface for EscaGCP
 """
 
 import click
@@ -22,11 +22,11 @@ logger = get_logger(__name__)
 @click.option('--config', '-c', type=click.Path(exists=True), help='Configuration file path')
 @click.pass_context
 def cli(ctx, config):
-    """GCPHound - Map GCP IAM relationships and discover attack paths"""
+    """EscaGCP - Map GCP IAM relationships and discover attack paths"""
     # Load configuration
     config_path = config or 'config/default.yaml'
     ctx.obj = Config.from_yaml(config_path)
-    logger.info("GCPHound initialized")
+    logger.info("EscaGCP initialized")
 
 
 @cli.command()
@@ -73,7 +73,7 @@ def collect(config, organization, folders, projects, output, include_logs, log_d
             collected_data['data']['logs'] = logs_data
             
             # Save logs separately
-            logs_file = Path(output) / f"gcphound_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            logs_file = Path(output) / f"escagcp_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             with open(logs_file, 'w') as f:
                 json.dump(logs_data, f, indent=2, default=str)
         
@@ -102,7 +102,7 @@ def build_graph(config, input, output):
     try:
         # Find latest collection file
         input_path = Path(input)
-        collection_files = list(input_path.glob('gcphound_complete_*.json'))
+        collection_files = list(input_path.glob('escagcp_complete_*.json'))
         
         if not collection_files:
             click.echo("No collection data found. Run 'collect' first.")
@@ -136,11 +136,11 @@ def build_graph(config, input, output):
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
         # GraphML
-        graphml_file = output_path / f"gcphound_graph_{timestamp}.graphml"
+        graphml_file = output_path / f"escagcp_graph_{timestamp}.graphml"
         exporter.export_graphml(str(graphml_file))
         
         # JSON
-        json_file = output_path / f"gcphound_graph_{timestamp}.json"
+        json_file = output_path / f"escagcp_graph_{timestamp}.json"
         exporter.export_json(str(json_file))
         
         # Metadata
@@ -176,7 +176,7 @@ def analyze(config, graph, output, format):
                     pattern = graph
                 else:
                     # Maybe it's a directory
-                    pattern = str(Path(graph) / 'gcphound_graph_*.json')
+                    pattern = str(Path(graph) / 'escagcp_graph_*.json')
                 
                 graph_files = list(Path('.').glob(pattern))
                 if not graph_files:
@@ -188,9 +188,9 @@ def analyze(config, graph, output, format):
                 click.echo(f"Using latest graph file: {graph_file}")
         else:
             # No graph specified, look in default location
-            graph_files = list(Path('graph').glob('gcphound_graph_*.json'))
+            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
             if not graph_files:
-                click.echo("No graph files found. Run 'gcphound build-graph' first.")
+                click.echo("No graph files found. Run 'escagcp build-graph' first.")
                 sys.exit(1)
             
             # Use the latest file
@@ -231,17 +231,17 @@ def analyze(config, graph, output, format):
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
         if format == 'json':
-            output_file = output_path / f"gcphound_analysis_{timestamp}.json"
+            output_file = output_path / f"escagcp_analysis_{timestamp}.json"
             with open(output_file, 'w') as f:
                 json.dump(results, f, indent=2, default=str)
         
         elif format == 'html':
             # Create HTML report
-            output_file = output_path / f"gcphound_analysis_{timestamp}.html"
+            output_file = output_path / f"escagcp_analysis_{timestamp}.html"
             _create_html_report(results, output_file)
         
         elif format == 'text':
-            output_file = output_path / f"gcphound_analysis_{timestamp}.txt"
+            output_file = output_path / f"escagcp_analysis_{timestamp}.txt"
             _create_text_report(results, output_file)
         
         # Print summary
@@ -286,7 +286,7 @@ def visualize(config, graph, output, viz_type, format):
                     pattern = graph
                 else:
                     # Maybe it's a directory
-                    pattern = str(Path(graph) / 'gcphound_graph_*.json')
+                    pattern = str(Path(graph) / 'escagcp_graph_*.json')
                 
                 graph_files = list(Path('.').glob(pattern))
                 if not graph_files:
@@ -298,9 +298,9 @@ def visualize(config, graph, output, viz_type, format):
                 click.echo(f"Using latest graph file: {graph_file}")
         else:
             # No graph specified, look in default location
-            graph_files = list(Path('graph').glob('gcphound_graph_*.json'))
+            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
             if not graph_files:
-                click.echo("No graph files found. Run 'gcphound build-graph' first.")
+                click.echo("No graph files found. Run 'escagcp build-graph' first.")
                 sys.exit(1)
             
             # Use the latest file
@@ -339,7 +339,7 @@ def visualize(config, graph, output, viz_type, format):
             visualizer = HTMLVisualizer(nx_graph, config)
             
             if viz_type == 'full':
-                output_file = output_path / f"gcphound_graph_{timestamp}.html"
+                output_file = output_path / f"escagcp_graph_{timestamp}.html"
                 visualizer.create_full_graph(str(output_file))
             
             elif viz_type == 'attack-paths':
@@ -358,7 +358,7 @@ def visualize(config, graph, output, viz_type, format):
                             'length': len(path) if hasattr(path, '__len__') else 0
                         })
                 
-                output_file = output_path / f"gcphound_attack_paths_{timestamp}.html"
+                output_file = output_path / f"escagcp_attack_paths_{timestamp}.html"
                 visualizer.create_full_graph(
                     str(output_file),
                     risk_scores=results['risk_scores'],
@@ -382,7 +382,7 @@ def visualize(config, graph, output, viz_type, format):
                             'length': len(path) if hasattr(path, '__len__') else 0
                         })
                 
-                output_file = output_path / f"gcphound_risk_graph_{timestamp}.html"
+                output_file = output_path / f"escagcp_risk_graph_{timestamp}.html"
                 visualizer.create_full_graph(
                     str(output_file),
                     risk_scores=results['risk_scores'],
@@ -398,7 +398,7 @@ def visualize(config, graph, output, viz_type, format):
                 analyzer = PathAnalyzer(nx_graph, config)
                 results = analyzer.analyze_all_paths()
                 
-                output_file = output_path / f"gcphound_risk_{timestamp}.graphml"
+                output_file = output_path / f"escagcp_risk_{timestamp}.graphml"
                 visualizer.export_with_risk_coloring(
                     str(output_file),
                     risk_scores=results['risk_scores'],
@@ -413,7 +413,7 @@ def visualize(config, graph, output, viz_type, format):
                 for category in results['attack_paths'].values():
                     all_paths.extend(category)
                 
-                output_file = output_path / f"gcphound_paths_{timestamp}.graphml"
+                output_file = output_path / f"escagcp_paths_{timestamp}.graphml"
                 visualizer.export_attack_paths_only(str(output_file), all_paths)
         
         click.echo(f"Visualization created: {output_file}")
@@ -447,7 +447,7 @@ def simulate(config, graph, action, member, role, resource, new_role):
                     pattern = graph
                 else:
                     # Maybe it's a directory
-                    pattern = str(Path(graph) / 'gcphound_graph_*.json')
+                    pattern = str(Path(graph) / 'escagcp_graph_*.json')
                 
                 graph_files = list(Path('.').glob(pattern))
                 if not graph_files:
@@ -459,9 +459,9 @@ def simulate(config, graph, action, member, role, resource, new_role):
                 click.echo(f"Using latest graph file: {graph_file}")
         else:
             # No graph specified, look in default location
-            graph_files = list(Path('graph').glob('gcphound_graph_*.json'))
+            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
             if not graph_files:
-                click.echo("No graph files found. Run 'gcphound build-graph' first.")
+                click.echo("No graph files found. Run 'escagcp build-graph' first.")
                 sys.exit(1)
             
             # Use the latest file
@@ -585,7 +585,7 @@ def query(config, graph, source, target, query_type):
                     pattern = graph
                 else:
                     # Maybe it's a directory
-                    pattern = str(Path(graph) / 'gcphound_graph_*.json')
+                    pattern = str(Path(graph) / 'escagcp_graph_*.json')
                 
                 graph_files = list(Path('.').glob(pattern))
                 if not graph_files:
@@ -597,9 +597,9 @@ def query(config, graph, source, target, query_type):
                 click.echo(f"Using latest graph file: {graph_file}")
         else:
             # No graph specified, look in default location
-            graph_files = list(Path('graph').glob('gcphound_graph_*.json'))
+            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
             if not graph_files:
-                click.echo("No graph files found. Run 'gcphound build-graph' first.")
+                click.echo("No graph files found. Run 'escagcp build-graph' first.")
                 sys.exit(1)
             
             # Use the latest file
@@ -711,7 +711,7 @@ def query(config, graph, source, target, query_type):
 @click.option('--open-browser', is_flag=True, default=True, help='Open visualization in browser after completion')
 @click.pass_obj
 def run(config, lazy, projects, open_browser):
-    """Run GCPHound operations - use --lazy for automatic execution"""
+    """Run EscaGCP operations - use --lazy for automatic execution"""
     if lazy:
         import subprocess
         import webbrowser
@@ -752,14 +752,14 @@ def run(config, lazy, projects, open_browser):
             
             # Step 3: Analyze graph
             click.echo("\nStep 3/4: Analyzing graph for attack paths...")
-            ctx.invoke(analyze, graph='graph/gcphound_graph_*.json', output='findings/', format='json')
+            ctx.invoke(analyze, graph='graph/escagcp_graph_*.json', output='findings/', format='json')
             
             # Step 4: Create visualization
             click.echo("\nStep 4/4: Creating visualization...")
-            ctx.invoke(visualize, graph='graph/gcphound_graph_*.json', output='visualizations/', viz_type='attack-paths', format='html')
+            ctx.invoke(visualize, graph='graph/escagcp_graph_*.json', output='visualizations/', viz_type='attack-paths', format='html')
             
             # Find the latest visualization file
-            viz_files = list(Path('visualizations').glob('gcphound_*.html'))
+            viz_files = list(Path('visualizations').glob('escagcp_*.html'))
             if viz_files:
                 latest_viz = max(viz_files, key=lambda f: f.stat().st_mtime)
                 click.echo(f"\n✅ All operations completed successfully!")
@@ -803,19 +803,19 @@ def run(config, lazy, projects, open_browser):
             sys.exit(1)
     else:
         # Show help for manual execution
-        click.echo("GCPHound - Run operations manually or use --lazy for automatic execution")
+        click.echo("EscaGCP - Run operations manually or use --lazy for automatic execution")
         click.echo("\nManual execution steps:")
-        click.echo("1. gcphound collect --projects $(gcloud config get-value project)")
-        click.echo("2. gcphound build-graph --input data/ --output graph/")
-        click.echo("3. gcphound analyze --graph graph/gcphound_graph_*.json --output findings/")
-        click.echo("4. gcphound visualize --graph graph/gcphound_graph_*.json --output visualizations/")
-        click.echo("\nOr simply run: gcphound run --lazy")
+        click.echo("1. escagcp collect --projects $(gcloud config get-value project)")
+        click.echo("2. escagcp build-graph --input data/ --output graph/")
+        click.echo("3. escagcp analyze --graph graph/escagcp_graph_*.json --output findings/")
+        click.echo("4. escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/")
+        click.echo("\nOr simply run: escagcp run --lazy")
 
 
 @cli.command()
 @click.option('--graph', '-g', help='Graph file path or pattern (e.g., graph/*.json)')
 @click.option('--output', '-o', default='report.html', help='Output HTML file')
-@click.option('--title', '-t', default='GCPHound Security Report', help='Report title')
+@click.option('--title', '-t', default='EscaGCP Security Report', help='Report title')
 @click.pass_obj
 def export(config, graph, output, title):
     """Export a standalone HTML report that can be shared"""
@@ -833,7 +833,7 @@ def export(config, graph, output, title):
                     pattern = graph
                 else:
                     # Maybe it's a directory
-                    pattern = str(Path(graph) / 'gcphound_graph_*.json')
+                    pattern = str(Path(graph) / 'escagcp_graph_*.json')
                 
                 graph_files = list(Path('.').glob(pattern))
                 if not graph_files:
@@ -845,9 +845,9 @@ def export(config, graph, output, title):
                 click.echo(f"Using latest graph file: {graph_file}")
         else:
             # No graph specified, look in default location
-            graph_files = list(Path('graph').glob('gcphound_graph_*.json'))
+            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
             if not graph_files:
-                click.echo("No graph files found. Run 'gcphound build-graph' first.")
+                click.echo("No graph files found. Run 'escagcp build-graph' first.")
                 sys.exit(1)
             
             # Use the latest file
@@ -908,7 +908,7 @@ def export(config, graph, output, title):
 
 @cli.command()
 @click.option('--graph', '-g', type=click.Path(exists=True), help='Path to graph JSON file (supports wildcards)')
-@click.option('--output', '-o', type=click.Path(), default='gcphound_simple_report.html', help='Output HTML file')
+@click.option('--output', '-o', type=click.Path(), default='escagcp_simple_report.html', help='Output HTML file')
 def simple_export(graph, output):
     """Export a simple HTML report with no external dependencies"""
     import json
@@ -929,9 +929,9 @@ def simple_export(graph, output):
     # Load graph data
     if not graph:
         # Find the latest graph file
-        graph_files = glob.glob('graph/gcphound_graph_*.json')
+        graph_files = glob.glob('graph/escagcp_graph_*.json')
         if not graph_files:
-            click.echo("No graph files found. Run 'gcphound collect' first.", err=True)
+            click.echo("No graph files found. Run 'escagcp collect' first.", err=True)
             return
         graph = max(graph_files, key=os.path.getmtime)
     
@@ -962,7 +962,7 @@ def simple_export(graph, output):
     html = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>GCPHound Report</title>
+    <title>EscaGCP Report</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -1029,7 +1029,7 @@ def simple_export(graph, output):
     </style>
 </head>
 <body>
-    <h1>GCPHound Security Report</h1>
+    <h1>EscaGCP Security Report</h1>
     <p>Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
     
     <div class="summary">
@@ -1105,8 +1105,8 @@ def simple_export(graph, output):
     {f'<p>Showing first 100 of {len(edges)} relationships.</p>' if len(edges) > 100 else ''}
     
     <div class="footer">
-        <p>This is a standalone GCPHound report. No external dependencies required.</p>
-        <p>Generated by GCPHound</p>
+        <p>This is a standalone EscaGCP report. No external dependencies required.</p>
+        <p>Generated by EscaGCP</p>
     </div>
 </body>
 </html>"""
@@ -1125,7 +1125,7 @@ def _create_html_report(results: Dict[str, Any], output_file: Path):
     <!DOCTYPE html>
     <html>
     <head>
-        <title>GCPHound Analysis Report</title>
+        <title>EscaGCP Analysis Report</title>
         <style>
             body {{ font-family: Arial, sans-serif; margin: 20px; }}
             h1, h2, h3 {{ color: #1a73e8; }}
@@ -1140,7 +1140,7 @@ def _create_html_report(results: Dict[str, Any], output_file: Path):
         </style>
     </head>
     <body>
-        <h1>GCPHound Analysis Report</h1>
+        <h1>EscaGCP Analysis Report</h1>
         <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         
         <div class="stats">
@@ -1202,7 +1202,7 @@ def _create_html_report(results: Dict[str, Any], output_file: Path):
 def _create_text_report(results: Dict[str, Any], output_file: Path):
     """Create text analysis report"""
     with open(output_file, 'w') as f:
-        f.write("GCPHound Analysis Report\n")
+        f.write("EscaGCP Analysis Report\n")
         f.write("=" * 50 + "\n\n")
         f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         
@@ -1253,7 +1253,7 @@ def cleanup(force, dry_run):
         '.coverage': 'Coverage data file',
         'coverage.xml': 'Coverage XML report',
         '*.html': 'Generated HTML reports (in root)',
-        'gcphound_*.html': 'GCPHound HTML reports',
+        'escagcp_*.html': 'EscaGCP HTML reports',
         'simple_report.html': 'Simple HTML reports',
     }
     
@@ -1351,19 +1351,19 @@ def cleanup(force, dry_run):
     if error_count > 0:
         click.echo(f"   - Errors: {error_count} items (check logs for details)")
     click.echo(f"   - Freed: {size_mb:.2f} MB")
-    click.echo("\n🎉 GCPHound is now clean and ready for a fresh start!")
+    click.echo("\n🎉 EscaGCP is now clean and ready for a fresh start!")
 
 
 @cli.command()
 def list_attack_types():
-    """List all attack types that GCPHound can detect"""
+    """List all attack types that EscaGCP can detect"""
     from .graph.models import EdgeType
     from .analyzers.paths import PathAnalyzer
     
     click.echo("=" * 80)
-    click.echo("GCPHound Attack Path Detection Capabilities")
+    click.echo("EscaGCP Attack Path Detection Capabilities")
     click.echo("=" * 80)
-    click.echo("\nGCPHound can detect the following types of privilege escalation attack paths:\n")
+    click.echo("\nEscaGCP can detect the following types of privilege escalation attack paths:\n")
     
     # Define attack path descriptions
     attack_descriptions = {

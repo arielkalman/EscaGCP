@@ -1,5 +1,5 @@
 """
-Security analysis modules for GCPHound
+Security analysis modules for EscaGCP
 """
 
 from .paths import PathAnalyzer

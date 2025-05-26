@@ -1,5 +1,5 @@
 """
-Integration tests for GCPHound full workflow
+Integration tests for EscaGCP full workflow
 """
 
 import pytest
@@ -16,7 +16,7 @@ from gcphound.visualizers import HTMLVisualizer, GraphMLVisualizer
 
 
 class TestFullWorkflow:
-    """Test the complete GCPHound workflow from collection to analysis"""
+    """Test the complete EscaGCP workflow from collection to analysis"""
     
     def test_complete_workflow(self, mock_auth_manager, mock_config, collected_data, temp_dir):
         """Test full workflow: collect -> build graph -> analyze -> visualize"""

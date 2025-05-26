@@ -1,5 +1,5 @@
 """
-GraphML visualization for GCPHound graphs
+GraphML visualization for EscaGCP graphs
 """
 
 import networkx as nx

@@ -1,5 +1,5 @@
 """
-Data collection modules for GCPHound
+Data collection modules for EscaGCP
 """
 
 from .base import BaseCollector

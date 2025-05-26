@@ -1,5 +1,5 @@
 """
-HTML visualization for GCPHound graphs - Dashboard style
+HTML visualization for EscaGCP graphs - Dashboard style
 """
 
 import json
@@ -154,7 +154,7 @@ class HTMLVisualizer:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GCPHound Security Dashboard</title>
+    <title>EscaGCP Security Dashboard</title>
     <meta charset="utf-8">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -715,7 +715,7 @@ class HTMLVisualizer:
     <div class="dashboard">
         <div class="main-content">
             <div class="header">
-                <h1>GCPHound Security Dashboard</h1>
+                <h1>EscaGCP Security Dashboard</h1>
                 <div class="stats-bar">
                     <div class="stat-item" onclick="showModal('nodes')">
                         <div class="stat-value">{stats['total_nodes']}</div>
@@ -999,7 +999,7 @@ class HTMLVisualizer:
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'gcphound_report_' + new Date().toISOString().slice(0, 10) + '.html';
+                a.download = 'escagcp_report_' + new Date().toISOString().slice(0, 10) + '.html';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -1025,7 +1025,7 @@ class HTMLVisualizer:
             return `<!DOCTYPE html>
 <html>
 <head>
-    <title>GCPHound Security Report - Standalone</title>
+    <title>EscaGCP Security Report - Standalone</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -1213,7 +1213,7 @@ class HTMLVisualizer:
 </head>
 <body>
     <div class="standalone-header">
-        <h1 class="standalone-title">GCPHound Security Report</h1>
+        <h1 class="standalone-title">EscaGCP Security Report</h1>
         <p class="standalone-subtitle">Generated on ${{new Date().toLocaleString()}} | Standalone Report</p>
         
         <div class="standalone-stats">
@@ -1280,7 +1280,7 @@ class HTMLVisualizer:
     </div>
     
     <div class="footer">
-        <p>This is a standalone GCPHound report. All data is embedded in this HTML file.</p>
+        <p>This is a standalone EscaGCP report. All data is embedded in this HTML file.</p>
         <p>No external dependencies or internet connection required.</p>
     </div>
     
@@ -1832,7 +1832,7 @@ class HTMLVisualizer:
         return '''<!DOCTYPE html>
 <html>
 <head>
-    <title>GCPHound Security Report - Standalone</title>
+    <title>EscaGCP Security Report - Standalone</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
@@ -1964,7 +1964,7 @@ class HTMLVisualizer:
 </head>
 <body>
     <div class="standalone-header">
-        <h1 class="standalone-title">GCPHound Security Report</h1>
+        <h1 class="standalone-title">EscaGCP Security Report</h1>
         <p class="standalone-subtitle">Generated on ${new Date().toLocaleString()} | Standalone Report</p>
         
         <div class="standalone-stats">
@@ -2031,7 +2031,7 @@ class HTMLVisualizer:
     </div>
     
     <div class="footer">
-        <p>This is a standalone GCPHound report. All data is embedded in this HTML file.</p>
+        <p>This is a standalone EscaGCP report. All data is embedded in this HTML file.</p>
         <p>No external dependencies or internet connection required.</p>
     </div>
     
@@ -2270,7 +2270,7 @@ class HTMLVisualizer:
         html = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>GCPHound Security Report</title>
+    <title>EscaGCP Security Report</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -2681,7 +2681,7 @@ class HTMLVisualizer:
 </head>
 <body>
     <div class="container">
-        <h1>GCPHound Security Report</h1>
+        <h1>EscaGCP Security Report</h1>
         <p style="color: #6b7280;">Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         
         <div class="summary-grid">

@@ -1,5 +1,5 @@
 """
-Setup script for GCPHound
+Setup script for EscaGCP
 """
 
 from setuptools import setup, find_packages
@@ -12,7 +12,7 @@ setup(
     version="0.1.0",
     author="Ariel Kalman",
     author_email="arielkalman5799@gmail.com",
-    description="A tool for mapping GCP IAM relationships and discovering attack paths",
+    description="EscaGCP - A tool for mapping GCP IAM relationships and discovering attack paths",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/arielkalman/EscaGCP",

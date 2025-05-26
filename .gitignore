@@ -133,13 +133,13 @@ dmypy.json
 .DS_Store
 Thumbs.db
 
-# GCPHound specific
+# EscaGCP specific
 data/
 graph/
 findings/
 visualizations/
 neo4j_import/
-gcphound-results/
+escagcp-results/
 *.graphml
 *.gexf
 
@@ -187,4 +187,4 @@ docs/_templates/
 *.html
 attack_path_summary.md
 simple_report.html
-gcphound_report.html 
+escagcp_report.html 

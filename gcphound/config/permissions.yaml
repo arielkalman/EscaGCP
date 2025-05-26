@@ -1,4 +1,4 @@
-# GCPHound Permission Mappings
+# EscaGCP Permission Mappings
 # Maps GCP IAM roles and permissions to edge types and risk levels
 
 # High-risk roles that enable privilege escalation

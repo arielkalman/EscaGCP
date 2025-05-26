@@ -1,4 +1,4 @@
-# GCPHound Visualization Improvements
+# EscaGCP Visualization Improvements
 
 ## Overview
 Enhanced the HTML visualization to create a comprehensive security dashboard with multiple informative components beyond just the graph.
@@ -75,17 +75,17 @@ Displays actual attack paths discovered:
 
 ### Generate Full Dashboard
 ```bash
-gcphound visualize --graph graph/gcphound_graph_*.json --output visualizations/ --type full
+escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/ --type full
 ```
 
 ### Generate Attack Path Focused View
 ```bash
-gcphound visualize --graph graph/gcphound_graph_*.json --output visualizations/ --type attack-paths
+escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/ --type attack-paths
 ```
 
 ### Generate Risk Focused View
 ```bash
-gcphound visualize --graph graph/gcphound_graph_*.json --output visualizations/ --type risk
+escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/ --type risk
 ```
 
 ## Benefits

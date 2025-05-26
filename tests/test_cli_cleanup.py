@@ -86,7 +86,7 @@ class TestCleanupCommand:
         
         assert result.exit_code == 0
         assert 'Cleanup completed!' in result.output
-        assert 'GCPHound is now clean and ready for a fresh start!' in result.output
+        assert 'EscaGCP is now clean and ready for a fresh start!' in result.output
     
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.is_dir')

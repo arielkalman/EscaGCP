@@ -1,7 +1,7 @@
-# Sharing GCPHound Reports
+# Sharing EscaGCP Reports
 
 ## Overview
-GCPHound now includes a powerful export feature that creates completely self-contained HTML reports that can be easily shared with colleagues, security teams, or management without requiring any additional software or dependencies.
+EscaGCP now includes a powerful export feature that creates completely self-contained HTML reports that can be easily shared with colleagues, security teams, or management without requiring any additional software or dependencies.
 
 ## Creating a Standalone Report
 
@@ -9,13 +9,13 @@ Use the `export` command to generate a shareable report:
 
 ```bash
 # Export using the latest graph
-gcphound export --output my_report.html
+escagcp export --output my_report.html
 
 # Export a specific graph file
-gcphound export --graph graph/gcphound_graph_20250526_134123.json --output report.html
+escagcp export --graph graph/escagcp_graph_20250526_134123.json --output report.html
 
 # Export with a custom title
-gcphound export --output security_audit.html --title "Q1 2025 GCP Security Audit"
+escagcp export --output security_audit.html --title "Q1 2025 GCP Security Audit"
 ```
 
 ## What's Included
@@ -63,20 +63,20 @@ When sharing reports, keep in mind:
 
 ### 1. Security Audit Reports
 ```bash
-gcphound export --output "gcp_security_audit_$(date +%Y%m%d).html" \
+escagcp export --output "gcp_security_audit_$(date +%Y%m%d).html" \
   --title "GCP Security Audit - $(date +%B' '%Y)"
 ```
 
 ### 2. Incident Response
 ```bash
-gcphound export --graph graph/incident_*.json \
+escagcp export --graph graph/incident_*.json \
   --output incident_report.html \
   --title "Security Incident Analysis"
 ```
 
 ### 3. Compliance Documentation
 ```bash
-gcphound export --output compliance_iam_review.html \
+escagcp export --output compliance_iam_review.html \
   --title "IAM Compliance Review"
 ```
 

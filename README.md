@@ -1,6 +1,6 @@
 # EscaGCP 🔍
 
-EscaGCP (formerly GCPHound) is a comprehensive graph-based analysis tool for Google Cloud Platform (GCP) that maps IAM relationships and permissions to reveal potential attack paths, similar to BloodHound for Active Directory environments.
+EscaGCP is a comprehensive graph-based analysis tool for Google Cloud Platform (GCP) that maps IAM relationships and permissions to reveal potential attack paths, similar to BloodHound for Active Directory environments.
 
 ## 🚀 Features
 
@@ -13,7 +13,7 @@ EscaGCP (formerly GCPHound) is a comprehensive graph-based analysis tool for Goo
 
 ### Attack Path Detection
 
-GCPHound detects all known GCP privilege escalation and lateral movement techniques:
+EscaGCP detects all known GCP privilege escalation and lateral movement techniques:
 
 #### 1. **Service Account Impersonation** (`CAN_IMPERSONATE_SA`)
 - Detects `roles/iam.serviceAccountTokenCreator` permissions
@@ -84,14 +84,14 @@ cd EscaGCP
 pip install -e .
 
 # Or install from PyPI (when published)
-pip install gcphound
+pip install escagcp
 ```
 
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
 
-Before running GCPHound, ensure you have:
+Before running EscaGCP, ensure you have:
 
 1. **GCP Authentication**: You need to be authenticated to GCP with appropriate permissions
 2. **Required APIs**: Enable the following APIs in your GCP projects:
@@ -103,7 +103,7 @@ Before running GCPHound, ensure you have:
 
 ### 2. Authentication Setup
 
-GCPHound supports multiple authentication methods:
+EscaGCP supports multiple authentication methods:
 
 #### Option A: Application Default Credentials (Recommended)
 ```bash
@@ -132,23 +132,23 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 ##### Option A: Automatic (Lazy) Mode 🚀
 ```bash
 # Run all operations automatically and open visualization in Chrome
-gcphound run --lazy
+escagcp run --lazy
 
 # Or specify projects explicitly
-gcphound run --lazy --projects project1,project2
+escagcp run --lazy --projects project1,project2
 ```
 
 ##### Option B: Manual Steps
 ```bash
 # Scan the current project
-gcphound collect --projects $(gcloud config get-value project)
+escagcp collect --projects $(gcloud config get-value project)
 
 # Build and analyze the graph
-gcphound build-graph --input data/ --output graph/
-gcphound analyze --graph graph/gcphound_graph_*.json --output findings/
+escagcp build-graph --input data/ --output graph/
+escagcp analyze --graph graph/escagcp_graph_*.json --output findings/
 
 # Create visualization
-gcphound visualize --graph graph/gcphound_graph_*.json --output visualizations/
+escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/
 ```
 
 #### Scan Entire Organization
@@ -157,19 +157,19 @@ gcphound visualize --graph graph/gcphound_graph_*.json --output visualizations/
 ORG_ID=$(gcloud organizations list --format="value(name)" | cut -d'/' -f2)
 
 # Scan the organization
-gcphound collect --organization $ORG_ID --output data/
+escagcp collect --organization $ORG_ID --output data/
 
 # Analyze with all features
-gcphound analyze --graph graph/gcphound_graph_*.json --format html --output findings/
+escagcp analyze --graph graph/escagcp_graph_*.json --format html --output findings/
 ```
 
 #### Scan Specific Projects
 ```bash
 # Scan multiple projects
-gcphound collect --projects project1,project2,project3 --output data/
+escagcp collect --projects project1,project2,project3 --output data/
 
 # Include audit logs (requires logging permissions)
-gcphound collect --projects project1,project2 --include-logs --log-days 30
+escagcp collect --projects project1,project2 --include-logs --log-days 30
 ```
 
 ### 4. Step-by-Step Workflow
@@ -179,13 +179,13 @@ Collect IAM and resource data from GCP:
 
 ```bash
 # Basic collection
-gcphound collect --projects YOUR_PROJECT_ID
+escagcp collect --projects YOUR_PROJECT_ID
 
 # With organization hierarchy
-gcphound collect --organization YOUR_ORG_ID --include-folders
+escagcp collect --organization YOUR_ORG_ID --include-folders
 
 # With specific configuration
-gcphound --config config.yaml collect --projects YOUR_PROJECT_ID
+escagcp --config config.yaml collect --projects YOUR_PROJECT_ID
 ```
 
 #### Step 2: Build Graph
@@ -193,7 +193,7 @@ Convert collected data into a graph:
 
 ```bash
 # Build graph from latest collection
-gcphound build-graph --input data/ --output graph/
+escagcp build-graph --input data/ --output graph/
 
 # The graph will be saved in multiple formats:
 # - GraphML (for Gephi, yEd)
@@ -206,13 +206,13 @@ Find attack paths and vulnerabilities:
 
 ```bash
 # Basic analysis
-gcphound analyze --graph graph/gcphound_graph_*.json
+escagcp analyze --graph graph/escagcp_graph_*.json
 
 # Generate HTML report
-gcphound analyze --graph graph/gcphound_graph_*.json --format html
+escagcp analyze --graph graph/escagcp_graph_*.json --format html
 
 # Generate text report
-gcphound analyze --graph graph/gcphound_graph_*.json --format text
+escagcp analyze --graph graph/escagcp_graph_*.json --format text
 ```
 
 #### Step 4: Visualize
@@ -220,13 +220,13 @@ Create interactive visualizations:
 
 ```bash
 # Full graph visualization
-gcphound visualize --graph graph/gcphound_graph_*.json --type full
+escagcp visualize --graph graph/escagcp_graph_*.json --type full
 
 # Attack paths only
-gcphound visualize --graph graph/gcphound_graph_*.json --type attack-paths
+escagcp visualize --graph graph/escagcp_graph_*.json --type attack-paths
 
 # Risk-based visualization
-gcphound visualize --graph graph/gcphound_graph_*.json --type risk
+escagcp visualize --graph graph/escagcp_graph_*.json --type risk
 ```
 
 #### Step 5: Query and Simulate
@@ -234,18 +234,18 @@ Query the graph and simulate changes:
 
 ```bash
 # Find paths between identities
-gcphound query --graph graph/gcphound_graph_*.json \
+escagcp query --graph graph/escagcp_graph_*.json \
   --from "user:alice@example.com" \
   --to "projects/production" \
   --type paths
 
 # Check what a user can access
-gcphound query --graph graph/gcphound_graph_*.json \
+escagcp query --graph graph/escagcp_graph_*.json \
   --from "user:bob@example.com" \
   --type access
 
 # Simulate adding a binding
-gcphound simulate --graph graph/gcphound_graph_*.json \
+escagcp simulate --graph graph/escagcp_graph_*.json \
   --action add \
   --member "user:eve@example.com" \
   --role "roles/iam.serviceAccountTokenCreator" \
@@ -288,7 +288,7 @@ analysis:
     - roles/cloudfunctions.admin
 
 output:
-  directory: ./gcphound-results
+  directory: ./escagcp-results
   formats:
     - json
     - graphml
@@ -297,7 +297,7 @@ output:
 
 Run with configuration:
 ```bash
-gcphound --config config.yaml collect --organization YOUR_ORG_ID
+escagcp --config config.yaml collect --organization YOUR_ORG_ID
 ```
 
 #### Continuous Monitoring
@@ -305,41 +305,41 @@ Set up a cron job for regular scans:
 
 ```bash
 # Create a script
-cat > /path/to/gcphound-scan.sh << 'EOF'
+cat > /path/to/escagcp-scan.sh << 'EOF'
 #!/bin/bash
-cd /path/to/gcphound
+cd /path/to/escagcp
 source venv/bin/activate
 
 # Run collection
-gcphound --config config.yaml collect --organization YOUR_ORG_ID
+escagcp --config config.yaml collect --organization YOUR_ORG_ID
 
 # Analyze
-LATEST_GRAPH=$(ls -t graph/gcphound_graph_*.json | head -1)
-gcphound analyze --graph "$LATEST_GRAPH" --format html
+LATEST_GRAPH=$(ls -t graph/escagcp_graph_*.json | head -1)
+escagcp analyze --graph "$LATEST_GRAPH" --format html
 
 # Send alerts if critical findings
 # ... add your alerting logic here
 EOF
 
-chmod +x /path/to/gcphound-scan.sh
+chmod +x /path/to/escagcp-scan.sh
 
 # Add to crontab (daily at 2 AM)
-(crontab -l 2>/dev/null; echo "0 2 * * * /path/to/gcphound-scan.sh") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * /path/to/escagcp-scan.sh") | crontab -
 ```
 
 #### Import to Neo4j
 ```bash
 # Export for Neo4j
-gcphound build-graph --input data/ --output neo4j_import/
+escagcp build-graph --input data/ --output neo4j_import/
 
 # Import using neo4j-admin
 neo4j-admin import \
   --nodes=neo4j_import/nodes.csv \
   --relationships=neo4j_import/edges.csv \
-  --database=gcphound
+  --database=escagcp
 
 # Or use Cypher import
-gcphound export --graph graph/gcphound_graph_*.json --format cypher --output import.cypher
+escagcp export --graph graph/escagcp_graph_*.json --format cypher --output import.cypher
 cypher-shell -f import.cypher
 ```
 
@@ -384,35 +384,35 @@ cypher-shell -f import.cypher
 Run with debug logging:
 ```bash
 # Set log level
-export GCPHOUND_LOG_LEVEL=DEBUG
+export ESCAGCP_LOG_LEVEL=DEBUG
 
 # Or use --debug flag
-gcphound --debug collect --projects YOUR_PROJECT_ID
+escagcp --debug collect --projects YOUR_PROJECT_ID
 ```
 
 ### 7. Output Files
 
-GCPHound generates several output files:
+EscaGCP generates several output files:
 
 - **Collection Phase**:
-  - `data/gcphound_complete_TIMESTAMP.json` - All collected data
-  - `data/gcphound_hierarchy_TIMESTAMP.json` - Organization/folder/project structure
-  - `data/gcphound_iam_TIMESTAMP.json` - IAM policies and bindings
-  - `data/gcphound_identity_TIMESTAMP.json` - Users, groups, service accounts
+  - `data/escagcp_complete_TIMESTAMP.json` - All collected data
+  - `data/escagcp_hierarchy_TIMESTAMP.json` - Organization/folder/project structure
+  - `data/escagcp_iam_TIMESTAMP.json` - IAM policies and bindings
+  - `data/escagcp_identity_TIMESTAMP.json` - Users, groups, service accounts
 
 - **Graph Phase**:
-  - `graph/gcphound_graph_TIMESTAMP.graphml` - Graph in GraphML format
-  - `graph/gcphound_graph_TIMESTAMP.json` - Graph in JSON format
+  - `graph/escagcp_graph_TIMESTAMP.graphml` - Graph in GraphML format
+  - `graph/escagcp_graph_TIMESTAMP.json` - Graph in JSON format
 
 - **Analysis Phase**:
-  - `findings/gcphound_analysis_TIMESTAMP.json` - Analysis results
-  - `findings/gcphound_analysis_TIMESTAMP.html` - HTML report
-  - `findings/gcphound_analysis_TIMESTAMP.txt` - Text report
+  - `findings/escagcp_analysis_TIMESTAMP.json` - Analysis results
+  - `findings/escagcp_analysis_TIMESTAMP.html` - HTML report
+  - `findings/escagcp_analysis_TIMESTAMP.txt` - Text report
 
 - **Visualization Phase**:
-  - `visualizations/gcphound_graph_TIMESTAMP.html` - Interactive graph
-  - `visualizations/gcphound_attack_paths_TIMESTAMP.html` - Attack paths only
-  - `visualizations/gcphound_risk_TIMESTAMP.graphml` - Risk-colored graph
+  - `visualizations/escagcp_graph_TIMESTAMP.html` - Interactive graph
+  - `visualizations/escagcp_attack_paths_TIMESTAMP.html` - Attack paths only
+  - `visualizations/escagcp_risk_TIMESTAMP.graphml` - Risk-colored graph
 
 ### 8. Cleaning Up
 
@@ -420,13 +420,13 @@ To remove all generated files and start fresh:
 
 ```bash
 # Preview what will be deleted
-gcphound cleanup --dry-run
+escagcp cleanup --dry-run
 
 # Clean up with confirmation prompt
-gcphound cleanup
+escagcp cleanup
 
 # Force cleanup without confirmation
-gcphound cleanup --force
+escagcp cleanup --force
 ```
 
 The cleanup command will remove:
@@ -473,33 +473,33 @@ export:
 
 ```bash
 # Basic scan of an organization
-gcphound collect --organization YOUR_ORG_ID
+escagcp collect --organization YOUR_ORG_ID
 
 # Scan specific projects
-gcphound collect --projects project1,project2,project3
+escagcp collect --projects project1,project2,project3
 
 # Full analysis with all features
-gcphound analyze --config config.yaml --output results/
+escagcp analyze --config config.yaml --output results/
 
 # What-if analysis
-gcphound simulate --add-binding "user:alice@example.com,roles/owner,projects/prod"
+escagcp simulate --add-binding "user:alice@example.com,roles/owner,projects/prod"
 
 # Export to Neo4j
-gcphound export --format neo4j --output neo4j_import/
+escagcp export --format neo4j --output neo4j_import/
 
 # Clean up all generated files and data
-gcphound cleanup  # Interactive confirmation
-gcphound cleanup --force  # Skip confirmation
-gcphound cleanup --dry-run  # Preview what will be deleted
+escagcp cleanup  # Interactive confirmation
+escagcp cleanup --force  # Skip confirmation
+escagcp cleanup --dry-run  # Preview what will be deleted
 ```
 
 ### Python API
 
 ```python
-from gcphound import GCPHound
+from gcphound import EscaGCP
 
 # Initialize
-hound = GCPHound(config_file='config.yaml')
+hound = EscaGCP(config_file='config.yaml')
 
 # Collect data
 data = hound.collect(
@@ -574,7 +574,7 @@ user:bob@example.com
 
 ## 🛡️ Security Best Practices
 
-Based on GCPHound findings, we recommend:
+Based on EscaGCP findings, we recommend:
 
 1. **Disable Service Account Key Creation**
    ```bash
@@ -650,12 +650,12 @@ This tool is for authorized security assessments only. Users are responsible for
 
 ---
 
-**Note**: GCPHound requires appropriate IAM permissions to collect data. Ensure you have the necessary access before running scans.
+**Note**: EscaGCP requires appropriate IAM permissions to collect data. Ensure you have the necessary access before running scans.
 
 ## Project Structure
 
 ```
-GCPHound/
+EscaGCP/
 ├── gcphound/                 # Main package directory
 │   ├── __init__.py
 │   ├── cli.py               # Command-line interface
@@ -721,11 +721,11 @@ GCPHound/
 
 ## 🔒 Security Notice
 
-⚠️ **Important**: GCPHound collects sensitive information about your GCP environment including project IDs, service account emails, user identities, and IAM permissions. 
+⚠️ **Important**: EscaGCP collects sensitive information about your GCP environment including project IDs, service account emails, user identities, and IAM permissions. 
 
 **Before sharing any outputs or publishing code modifications**, please review the [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md) file to ensure no sensitive data is exposed.
 
 Use the cleanup command to remove all collected data:
 ```bash
-gcphound cleanup --force
+escagcp cleanup --force
 ``` 

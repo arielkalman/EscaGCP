@@ -42,7 +42,7 @@ class TestCLI:
         """Test CLI help command"""
         result = runner.invoke(cli, ['--help'])
         assert result.exit_code == 0
-        assert 'GCPHound - Map GCP IAM relationships and discover attack paths' in result.output
+        assert 'EscaGCP - Map GCP IAM relationships and discover attack paths' in result.output
         assert 'Commands:' in result.output
         
 
@@ -129,7 +129,7 @@ class TestCLI:
         with runner.isolated_filesystem():
             # Create test data file
             os.makedirs('data', exist_ok=True)
-            with open('data/gcphound_complete_20230101_120000.json', 'w') as f:
+            with open('data/escagcp_complete_20230101_120000.json', 'w') as f:
                 json.dump({'data': {'test': 'data'}}, f)
                 
             result = runner.invoke(cli, [
@@ -504,7 +504,7 @@ class TestCLI:
         with runner.isolated_filesystem():
             # Create data directory and a data file that build-graph can find
             os.makedirs('data', exist_ok=True)
-            with open('data/gcphound_complete_20230101_120000.json', 'w') as f:
+            with open('data/escagcp_complete_20230101_120000.json', 'w') as f:
                 json.dump({
                     'data': {'test': 'data'},
                     'metadata': {'collection_time': '2023-01-01T12:00:00'}
@@ -512,7 +512,7 @@ class TestCLI:
                 
             # Create graph directory and a graph file that analyze can find
             os.makedirs('graph', exist_ok=True)
-            with open('graph/gcphound_graph_20230101_120000.json', 'w') as f:
+            with open('graph/escagcp_graph_20230101_120000.json', 'w') as f:
                 json.dump({'nodes': [], 'edges': []}, f)
                 
             # Create visualizations directory for the output
@@ -523,7 +523,7 @@ class TestCLI:
                 # Create the actual file that the run command will look for
                 import datetime
                 timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-                viz_file = f'visualizations/gcphound_attack_paths_{timestamp}.html'
+                viz_file = f'visualizations/escagcp_attack_paths_{timestamp}.html'
                 with open(viz_file, 'w') as f:
                     f.write('<html>test</html>')
             
@@ -569,9 +569,9 @@ class TestCLI:
         with runner.isolated_filesystem():
             # Create multiple graph files
             os.makedirs('graph', exist_ok=True)
-            with open('graph/gcphound_graph_20230101_120000.json', 'w') as f:
+            with open('graph/escagcp_graph_20230101_120000.json', 'w') as f:
                 json.dump({'nodes': [], 'edges': []}, f)
-            with open('graph/gcphound_graph_20230102_120000.json', 'w') as f:
+            with open('graph/escagcp_graph_20230102_120000.json', 'w') as f:
                 json.dump({'nodes': [], 'edges': []}, f)
                 
             with patch('gcphound.cli.PathAnalyzer') as mock_analyzer:
@@ -600,7 +600,7 @@ class TestCLI:
                     
                     result = runner.invoke(cli, [
                         'analyze',
-                        '--graph', 'graph/gcphound_graph_*.json',
+                        '--graph', 'graph/escagcp_graph_*.json',
                         '--output', 'findings/'
                     ])
                     

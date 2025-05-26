@@ -1,5 +1,5 @@
 """
-Base collector class for GCPHound
+Base collector class for EscaGCP
 """
 
 import json

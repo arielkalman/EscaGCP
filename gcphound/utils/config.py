@@ -1,5 +1,5 @@
 """
-Configuration management for GCPHound
+Configuration management for EscaGCP
 """
 
 import os
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 @dataclass
 class Config:
     """
-    Configuration for GCPHound
+    Configuration for EscaGCP
     """
     # Authentication settings
     authentication_method: str = 'adc'  # 'adc' or 'service_account'

@@ -1,6 +1,6 @@
-# GCPHound Lazy Mode Demo
+# EscaGCP Lazy Mode Demo
 
-The new `--lazy` mode allows you to run all GCPHound operations with a single command!
+The new `--lazy` mode allows you to run all EscaGCP operations with a single command!
 
 ## Quick Start
 
@@ -15,7 +15,7 @@ If you have a GCP project set in your gcloud config:
 # 3. Analyze for attack paths
 # 4. Create visualization
 # 5. Open the results in Chrome
-gcphound run --lazy
+escagcp run --lazy
 ```
 
 ### 2. Specifying Projects
@@ -24,7 +24,7 @@ You can also specify which projects to scan:
 
 ```bash
 # Scan specific projects
-gcphound run --lazy -p project1 -p project2 -p project3
+escagcp run --lazy -p project1 -p project2 -p project3
 ```
 
 ### 3. Without Opening Browser
@@ -32,31 +32,31 @@ gcphound run --lazy -p project1 -p project2 -p project3
 If you don't want to automatically open the browser:
 
 ```bash
-gcphound run --lazy --no-open-browser
+escagcp run --lazy --no-open-browser
 ```
 
 ## What Happens Behind the Scenes
 
-When you run `gcphound run --lazy`, it executes these commands in sequence:
+When you run `escagcp run --lazy`, it executes these commands in sequence:
 
 1. **Data Collection**
    ```bash
-   gcphound collect --projects $(gcloud config get-value project)
+   escagcp collect --projects $(gcloud config get-value project)
    ```
 
 2. **Graph Building**
    ```bash
-   gcphound build-graph --input data/ --output graph/
+   escagcp build-graph --input data/ --output graph/
    ```
 
 3. **Analysis**
    ```bash
-   gcphound analyze --graph graph/gcphound_graph_*.json --output findings/
+   escagcp analyze --graph graph/escagcp_graph_*.json --output findings/
    ```
 
 4. **Visualization**
    ```bash
-   gcphound visualize --graph graph/gcphound_graph_*.json --output visualizations/
+   escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/
    ```
 
 5. **Browser Launch**
@@ -73,7 +73,7 @@ After running, you'll find:
 ## Example Output
 
 ```
-$ gcphound run --lazy
+$ escagcp run --lazy
 Step 1/4: Collecting data from GCP...
 Using current project: my-gcp-project
 [Progress bars and collection logs...]
@@ -92,7 +92,7 @@ Analysis completed:
   High-risk nodes: 11
 
 Step 4/4: Creating visualization...
-Visualization created: visualizations/gcphound_attack_paths_20250526_151200.html
+Visualization created: visualizations/escagcp_attack_paths_20250526_151200.html
 
 ✅ All operations completed successfully!
 Opening visualization in browser...
@@ -103,7 +103,7 @@ Opening visualization in browser...
 If you prefer to run commands manually or need more control:
 
 ```bash
-gcphound run
+escagcp run
 ```
 
 This will show you the manual steps you can run individually. 
