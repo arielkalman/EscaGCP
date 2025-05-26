@@ -1,0 +1,266 @@
+# GCPHound Permission Mappings
+# Maps GCP IAM roles and permissions to edge types and risk levels
+
+# High-risk roles that enable privilege escalation
+privilege_escalation_roles:
+  - role: roles/iam.serviceAccountTokenCreator
+    edge_type: CAN_IMPERSONATE_SA
+    risk_level: critical
+    description: Allows impersonation of service accounts
+    
+  - role: roles/iam.serviceAccountKeyAdmin
+    edge_type: CAN_CREATE_KEY
+    risk_level: high
+    description: Allows creation of service account keys
+    
+  - role: roles/iam.serviceAccountUser
+    edge_type: CAN_ACT_AS
+    risk_level: high
+    description: Allows using service account for compute resources
+    requires_additional: [roles/compute.instanceAdmin, roles/cloudfunctions.developer, roles/run.developer]
+    
+  - role: roles/iam.workloadIdentityUser
+    edge_type: CAN_IMPERSONATE_SA
+    risk_level: high
+    description: Allows workload identity federation
+    
+  - role: roles/cloudbuild.builds.editor
+    edge_type: CAN_TRIGGER_BUILD_AS
+    risk_level: critical
+    description: Can trigger Cloud Build as default SA (often has editor role)
+    
+  - role: roles/cloudbuild.builds.builder
+    edge_type: CAN_TRIGGER_BUILD_AS
+    risk_level: critical
+    description: Can submit Cloud Build jobs
+    
+  - role: roles/resourcemanager.tagUser
+    edge_type: CAN_MODIFY_TAG
+    risk_level: medium
+    description: Can modify resource tags (potential for condition bypass)
+    
+  - role: roles/resourcemanager.tagAdmin
+    edge_type: CAN_MODIFY_TAG
+    risk_level: high
+    description: Full control over tags
+    
+  - role: roles/orgpolicy.policyAdmin
+    edge_type: CAN_BYPASS_ORG_POLICY
+    risk_level: critical
+    description: Can modify organizational policies
+    
+  - role: roles/iam.roleAdmin
+    edge_type: CAN_CREATE_CUSTOM_ROLE
+    risk_level: high
+    description: Can create custom roles with arbitrary permissions
+    
+  - role: roles/iam.organizationRoleAdmin
+    edge_type: CAN_CREATE_CUSTOM_ROLE
+    risk_level: critical
+    description: Can create org-level custom roles
+
+# VM/Compute access roles
+compute_access_roles:
+  - role: roles/compute.osLogin
+    edge_type: CAN_LOGIN_TO_VM
+    risk_level: medium
+    description: SSH access to VMs via OS Login
+    
+  - role: roles/compute.osAdminLogin
+    edge_type: CAN_LOGIN_TO_VM
+    risk_level: high
+    description: Admin SSH access to VMs via OS Login
+    
+  - role: roles/iap.tunnelResourceAccessor
+    edge_type: CAN_LOGIN_TO_VM
+    risk_level: medium
+    description: Access VMs via IAP tunnel
+
+# Deployment roles that can be combined with serviceAccountUser
+deployment_roles:
+  - role: roles/compute.instanceAdmin
+    capability: deploy_vm
+    risk_level: high
+    description: Can create and manage compute instances
+    
+  - role: roles/compute.instanceAdmin.v1
+    capability: deploy_vm
+    risk_level: high
+    description: Can create and manage compute instances
+    
+  - role: roles/cloudfunctions.developer
+    capability: deploy_function
+    edge_type: CAN_DEPLOY_FUNCTION_AS
+    risk_level: high
+    description: Can deploy Cloud Functions
+    
+  - role: roles/run.developer
+    capability: deploy_cloudrun
+    edge_type: CAN_DEPLOY_CLOUDRUN_AS
+    risk_level: high
+    description: Can deploy Cloud Run services
+    
+  - role: roles/container.developer
+    capability: deploy_gke_workload
+    risk_level: high
+    description: Can deploy GKE workloads
+
+# Workload Identity Federation roles
+workload_identity_roles:
+  - role: roles/iam.workloadIdentityPoolAdmin
+    edge_type: CAN_CONFIGURE_WORKLOAD_IDENTITY
+    risk_level: high
+    description: Can configure workload identity pools
+    
+  - role: roles/container.admin
+    edge_type: CAN_CONFIGURE_WORKLOAD_IDENTITY
+    risk_level: high
+    description: Full GKE admin including workload identity
+
+# Data access roles
+data_access_roles:
+  - role: roles/storage.objectViewer
+    edge_type: CAN_VIEW
+    target_type: BUCKET
+    risk_level: low
+    
+  - role: roles/storage.objectAdmin
+    edge_type: CAN_ADMIN
+    target_type: BUCKET
+    risk_level: high
+    
+  - role: roles/bigquery.dataViewer
+    edge_type: CAN_VIEW
+    target_type: DATASET
+    risk_level: medium
+    
+  - role: roles/bigquery.dataEditor
+    edge_type: CAN_EDIT
+    target_type: DATASET
+    risk_level: high
+    
+  - role: roles/secretmanager.secretAccessor
+    edge_type: CAN_VIEW
+    target_type: SECRET
+    risk_level: high
+    
+  - role: roles/cloudkms.cryptoKeyDecrypter
+    edge_type: CAN_USE
+    target_type: KMS_KEY
+    risk_level: high
+
+# Admin roles
+admin_roles:
+  - role: roles/owner
+    edge_type: CAN_ADMIN
+    risk_level: critical
+    description: Full control over all resources
+    
+  - role: roles/editor
+    edge_type: CAN_EDIT
+    risk_level: high
+    description: Edit access to most resources
+    
+  - role: roles/viewer
+    edge_type: CAN_VIEW
+    risk_level: low
+    description: Read access to most resources
+    
+  - role: roles/resourcemanager.organizationAdmin
+    edge_type: CAN_ADMIN
+    risk_level: critical
+    description: Full control over organization
+    
+  - role: roles/resourcemanager.folderAdmin
+    edge_type: CAN_ADMIN
+    risk_level: high
+    description: Full control over folders
+    
+  - role: roles/resourcemanager.projectCreator
+    edge_type: CAN_CREATE
+    risk_level: high
+    description: Can create new projects
+
+# Dangerous permission combinations
+dangerous_combinations:
+  - name: "Service Account Impersonation Chain"
+    requires_all:
+      - roles/iam.serviceAccountUser
+      - roles/iam.serviceAccountTokenCreator
+    risk_level: critical
+    description: Can chain service account impersonation
+    
+  - name: "Compute Privilege Escalation"
+    requires_all:
+      - roles/iam.serviceAccountUser
+      - roles/compute.instanceAdmin
+    risk_level: critical
+    description: Can deploy VMs with arbitrary service accounts
+    
+  - name: "Cloud Function Backdoor"
+    requires_all:
+      - roles/iam.serviceAccountUser
+      - roles/cloudfunctions.developer
+    risk_level: critical
+    description: Can deploy functions with arbitrary service accounts
+    
+  - name: "Tag-based Condition Bypass"
+    requires_all:
+      - roles/resourcemanager.tagUser
+      - "IAM binding with tag condition"
+    risk_level: high
+    description: Can manipulate tags to satisfy IAM conditions
+
+# Permissions that should trigger alerts
+alert_worthy_permissions:
+  - permission: iam.serviceAccountKeys.create
+    severity: high
+    reason: "Service account key creation should be rare"
+    
+  - permission: iam.serviceAccounts.actAs
+    severity: medium
+    reason: "ActAs usage should be monitored"
+    
+  - permission: resourcemanager.projects.setIamPolicy
+    severity: high
+    reason: "Project-level IAM changes"
+    
+  - permission: orgpolicy.policy.set
+    severity: critical
+    reason: "Organization policy modifications"
+    
+  - permission: iam.roles.create
+    severity: high
+    reason: "Custom role creation"
+
+# Default service accounts to flag
+default_service_accounts:
+  - pattern: "*-compute@developer.gserviceaccount.com"
+    risk: high
+    reason: "Default Compute Engine SA often has Editor role"
+    
+  - pattern: "*@appspot.gserviceaccount.com"
+    risk: high
+    reason: "Default App Engine SA often has Editor role"
+    
+  - pattern: "*@cloudbuild.gserviceaccount.com"
+    risk: critical
+    reason: "Cloud Build SA often has broad permissions"
+    
+  - pattern: "*@cloudservices.gserviceaccount.com"
+    risk: medium
+    reason: "Google-managed service account"
+
+# Risky OAuth scopes
+risky_oauth_scopes:
+  - scope: "https://www.googleapis.com/auth/cloud-platform"
+    risk: high
+    reason: "Full cloud platform access"
+    
+  - scope: "https://www.googleapis.com/auth/compute"
+    risk: medium
+    reason: "Full compute access"
+    
+  - scope: "https://www.googleapis.com/auth/devstorage.full_control"
+    risk: high
+    reason: "Full storage access" 

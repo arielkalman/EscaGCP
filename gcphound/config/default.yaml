@@ -1,0 +1,335 @@
+# GCPHound Default Configuration
+
+# Authentication settings
+authentication:
+  # Method: 'adc' (Application Default Credentials) or 'service_account'
+  method: adc
+  # Service account key file (if method is 'service_account')
+  service_account_file: null
+  # Impersonate service account (optional)
+  impersonate_service_account: null
+  # Quota project for API requests
+  quota_project: null
+  # Scopes
+  scopes:
+    - https://www.googleapis.com/auth/cloud-platform.read-only
+    - https://www.googleapis.com/auth/admin.directory.group.readonly
+    - https://www.googleapis.com/auth/admin.directory.user.readonly
+
+# Collection settings
+collection:
+  # Maximum number of projects to collect (0 = unlimited)
+  max_projects: 0
+  # Maximum number of resources per type per project
+  max_resources_per_type: 1000
+  # Page size for API requests
+  page_size: 100
+  # Maximum number of retries
+  max_retries: 3
+  # Retry delay in seconds
+  retry_delay: 1.0
+  # Request timeout in seconds
+  request_timeout: 60
+  # Rate limiting
+  requests_per_second: 10
+  # Burst size for rate limiting
+  burst_size: 20
+  # Parallel collection
+  parallel_collectors: true
+  # Concurrent workers for collection
+  max_workers: 5
+  # Collect logs data
+  collect_logs: true
+  # Collect tags data
+  collect_tags: true
+  # Collect Cloud Build data
+  collect_cloudbuild: true
+  # Collect GKE data
+  collect_gke: true
+  # Collect custom roles
+  collect_custom_roles: true
+  # Collect IAM conditions
+  collect_iam_conditions: true
+  # Collect resource metadata
+  collect_resource_metadata: true
+  # Enable progress bars
+  show_progress: true
+  # Collect audit logs
+  collect_audit_logs: false
+  # Days of audit logs to collect
+  audit_log_days: 7
+  # Resource types to collect
+  resource_types:
+    - buckets
+    - compute_instances
+    - functions
+    - bigquery_datasets
+    - secrets
+    - kms_keys
+    - pubsub_topics
+    - cloud_run_services
+    - gke_clusters
+
+# Graph settings
+graph:
+  # Graph engine: 'networkx' or 'neo4j'
+  engine: networkx
+  # Neo4j connection (if engine is 'neo4j')
+  neo4j_uri: bolt://localhost:7687
+  neo4j_user: neo4j
+  neo4j_password: password
+  # Include inherited permissions
+  include_inherited: true
+  # Include group memberships
+  expand_groups: true
+  # Include service account impersonation chains
+  follow_impersonation: true
+  # Maximum impersonation chain depth
+  max_impersonation_depth: 3
+  # Include resource relationships
+  include_resource_relationships: true
+  # Include tag relationships
+  include_tag_relationships: true
+  # Include workload identity relationships
+  include_workload_identity: true
+
+# Analysis settings
+analysis:
+  # Maximum path length to consider
+  max_path_length: 6
+  # Dangerous roles to check for privilege escalation
+  dangerous_roles:
+    - roles/owner
+    - roles/editor
+    - roles/iam.securityAdmin
+    - roles/iam.serviceAccountAdmin
+    - roles/iam.serviceAccountTokenCreator
+    - roles/resourcemanager.organizationAdmin
+    - roles/resourcemanager.folderAdmin
+    - roles/resourcemanager.projectIamAdmin
+    - roles/cloudfunctions.admin
+    - roles/run.admin
+    - roles/compute.admin
+    - roles/container.admin
+  # Risk score thresholds
+  risk_thresholds:
+    critical: 0.8
+    high: 0.6
+    medium: 0.4
+    low: 0.2
+  # Attack path detection
+  detect_privilege_escalation: true
+  detect_lateral_movement: true
+  detect_data_exfiltration: true
+  detect_persistence: true
+  # Specific attack path detection
+  detect_sa_impersonation: true
+  detect_sa_key_creation: true
+  detect_act_as_escalation: true
+  detect_cloud_function_escalation: true
+  detect_cloud_build_escalation: true
+  detect_vm_token_theft: true
+  detect_tag_escalation: true
+  detect_workload_identity_abuse: true
+  detect_org_policy_bypass: true
+  detect_custom_role_escalation: true
+  # Vulnerability detection
+  detect_overprivileged_sas: true
+  detect_public_resources: true
+  detect_default_sa_usage: true
+  detect_stale_permissions: true
+  detect_weak_org_policies: true
+  detect_unencrypted_data: true
+  # Analysis depth
+  analyze_cross_project_access: true
+  analyze_external_access: true
+  analyze_supply_chain_risks: true
+  # Simulation settings
+  enable_what_if_analysis: true
+  track_permission_changes: true
+  # Enable specific analysis types
+  enable_privilege_escalation_analysis: true
+  enable_lateral_movement_analysis: true
+  enable_impersonation_chain_analysis: true
+  enable_vulnerability_detection: true
+
+# Export settings
+export:
+  # Export formats
+  formats:
+    - graphml
+    - json
+    - neo4j_csv
+  # Output directory
+  output_dir: ./output
+  # Include metadata in exports
+  include_metadata: true
+  # Compress large exports
+  compress: true
+  # Export attack paths separately
+  export_attack_paths: true
+  # Export risk scores
+  export_risk_scores: true
+  # Export recommendations
+  export_recommendations: true
+
+# Visualization settings
+visualization:
+  # Enable HTML visualization
+  generate_html: true
+  # HTML template
+  template: default
+  # Node colors by type
+  node_colors:
+    user: "#4285F4"
+    service_account: "#EA4335"
+    group: "#34A853"
+    project: "#FBBC04"
+    folder: "#FF6D00"
+    organization: "#AB47BC"
+    resource: "#00ACC1"
+    bucket: "#43A047"
+    instance: "#1E88E5"
+    function: "#8E24AA"
+    secret: "#D32F2F"
+    tag: "#F57C00"
+    gke_cluster: "#0277BD"
+  # Edge colors by type
+  edge_colors:
+    CAN_IMPERSONATE_SA: "#D32F2F"
+    CAN_CREATE_KEY: "#C62828"
+    CAN_ACT_AS_VIA_VM: "#AD1457"
+    CAN_DEPLOY_FUNCTION_AS: "#6A1B9A"
+    CAN_TRIGGER_BUILD_AS: "#4527A0"
+    CAN_LOGIN_TO_VM: "#283593"
+    CAN_MODIFY_TAG: "#1565C0"
+    CAN_CONFIGURE_WORKLOAD_IDENTITY: "#0277BD"
+    CAN_BYPASS_ORG_POLICY: "#B71C1C"
+    CAN_ADMIN: "#D32F2F"
+    CAN_EDIT: "#F57C00"
+    CAN_VIEW: "#388E3C"
+    HAS_PERMISSION: "#757575"
+  # Layout algorithm
+  layout: force_directed
+  # Include risk scores in visualization
+  show_risk_scores: true
+  # Highlight attack paths
+  highlight_attack_paths: true
+  # Interactive features
+  enable_filtering: true
+  enable_search: true
+  enable_zoom: true
+
+# Monitoring settings
+monitoring:
+  # Enable continuous monitoring
+  enabled: false
+  # Scan interval (seconds)
+  scan_interval: 3600
+  # Alert on new attack paths
+  alert_new_paths: true
+  # Alert on permission changes
+  alert_permission_changes: true
+  # Alert on new external access
+  alert_external_access: true
+  # Alert thresholds
+  alert_risk_threshold: 0.7
+  # Notification channels
+  notifications:
+    - type: log
+      level: warning
+    # - type: email
+    #   recipients: ["security@example.com"]
+    # - type: slack
+    #   webhook_url: "https://hooks.slack.com/..."
+    # - type: pubsub
+    #   topic: "projects/PROJECT/topics/TOPIC"
+
+# Performance settings
+performance:
+  # Cache API responses
+  enable_caching: true
+  cache_ttl: 300
+  # Batch API requests
+  batch_requests: true
+  batch_size: 50
+  # Memory limits
+  max_memory_mb: 4096
+  # CPU limits
+  max_cpu_percent: 80
+
+# Security settings
+security:
+  # Mask sensitive data in logs
+  mask_sensitive_data: true
+  # Sensitive data patterns
+  sensitive_patterns:
+    - "private_key"
+    - "password"
+    - "secret"
+    - "token"
+  # Audit logging
+  audit_logging: true
+  audit_log_file: ./logs/audit.log
+
+# Advanced settings
+advanced:
+  # Custom role analysis
+  analyze_custom_roles: true
+  # Permission inheritance depth
+  inheritance_depth: 5
+  # Group expansion depth
+  group_expansion_depth: 3
+  # Tag condition analysis
+  analyze_tag_conditions: true
+  # Binary authorization analysis
+  analyze_binary_authorization: true
+  # VPC Service Controls analysis
+  analyze_vpc_sc: true
+  # Organization policy analysis
+  analyze_org_policies: true
+  # Access context analysis
+  analyze_access_context: true
+  # Workload identity pool analysis
+  analyze_wi_pools: true
+  # Cross-project analysis depth
+  cross_project_depth: 2
+  # External identity domains to flag
+  external_domains:
+    - gmail.com
+    - yahoo.com
+    - outlook.com
+  # Trusted domains (internal)
+  trusted_domains:
+    - example.com
+    - example.org
+
+# Logging settings
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: INFO
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  # Log file
+  file: ./logs/gcphound.log
+  # Log rotation
+  rotate: true
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+  # Console output
+  console: true
+  # Rich console output
+  use_rich: true
+
+# Debug settings
+debug:
+  # Enable debug mode
+  enabled: false
+  # Save raw API responses
+  save_raw_responses: false
+  # Profile performance
+  profile: false
+  # Trace graph building
+  trace_graph_building: false
+  # Validate graph integrity
+  validate_graph: true 
