@@ -542,8 +542,9 @@ class TestCLI:
             assert result.exit_code == 0
             orchestrator_instance.collect_all.assert_called_once()
             builder_instance.build_from_collected_data.assert_called_once()
-            # analyze_all_paths is called twice - once by analyze command and once by visualize command
-            assert analyzer_instance.analyze_all_paths.call_count == 2
+            # analyze_all_paths is called once by analyze command
+            # The visualize command will try to load from findings file first
+            assert analyzer_instance.analyze_all_paths.call_count == 1
             # The visualizer should be called for the visualize command
             assert visualizer_instance.create_full_graph.called or visualizer_instance.create_attack_paths_graph.called
             # Browser opening is optional based on the --open-browser flag (default True)

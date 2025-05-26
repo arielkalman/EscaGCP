@@ -179,6 +179,10 @@ visualization:
   generate_html: true
   # HTML template
   template: default
+  # Attack path graph visualization
+  attack_path_graphs: true
+  graph_style: clean
+  max_nodes: 30
   # Node colors by type
   node_colors:
     user: "#4285F4"

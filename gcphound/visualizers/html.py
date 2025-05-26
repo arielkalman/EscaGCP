@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional, List, Set
 from collections import defaultdict
 from datetime import datetime
 from ..utils import get_logger, Config
-from ..graph.models import NodeType, EdgeType
+from ..graph.models import NodeType, EdgeType, AttackPath
 from ..analyzers import PathAnalyzer
 
 
@@ -159,7 +159,7 @@ class HTMLVisualizer:
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
     <style>
         body {{
             margin: 0;
@@ -528,6 +528,14 @@ class HTMLVisualizer:
             font-size: 13px;
             font-family: 'Inter', sans-serif;
             border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }}
+        
+        .path-list-item.clickable:hover {{
+            background-color: #f3f4f6;
+            border-color: #6b46c1;
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }}
         
         .path-risk {{
@@ -752,10 +760,10 @@ class HTMLVisualizer:
         
         <div class="sidebar">
             <div class="sidebar-tabs">
-                <button class="tab active" onclick="showTab('legend')">Legend</button>
-                <button class="tab" onclick="showTab('attacks')">Attack Paths</button>
-                <button class="tab" onclick="showTab('roles')">Dangerous Roles</button>
-                <button class="tab" onclick="showTab('paths')">Found Paths</button>
+                <button class="tab active" onclick="showTab('legend', event)">Legend</button>
+                <button class="tab" onclick="showTab('attacks', event)">Attack Paths</button>
+                <button class="tab" onclick="showTab('roles', event)">Dangerous Roles</button>
+                <button class="tab" onclick="showTab('paths', event)">Found Paths</button>
             </div>
             
             <div class="sidebar-content">
@@ -944,424 +952,11 @@ class HTMLVisualizer:
         const nodesByType = {json.dumps(nodes_by_type)};
         const edgesByType = {json.dumps(edges_by_type)};
         
-        // Define all functions first
-        function showTab(tabName) {{
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {{
-                tab.classList.add('hidden');
-            }});
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {{
-                tab.classList.remove('active');
-            }});
-            
-            // Show selected tab
-            document.getElementById(tabName + '-tab').classList.remove('hidden');
-            
-            // Add active class to clicked tab
-            event.target.classList.add('active');
-        }}
+        {self._get_dashboard_javascript()}
         
-        function showModal(modalType) {{
-            document.getElementById(modalType + 'Modal').style.display = 'block';
-        }}
-        
-        function closeModal(modalType) {{
-            document.getElementById(modalType + 'Modal').style.display = 'none';
-        }}
-        
-        function toggleCollapsible(element) {{
-            element.classList.toggle('active');
-            var content = element.nextElementSibling;
-            content.classList.toggle('show');
-        }}
-        
-        function showShareModal() {{
-            document.getElementById('shareModal').style.display = 'block';
-            document.getElementById('shareLoading').style.display = 'none';
-            document.getElementById('shareSuccess').style.display = 'none';
-        }}
-        
-        function closeShareModal() {{
-            document.getElementById('shareModal').style.display = 'none';
-        }}
-        
-        function generateStandaloneReport() {{
-            document.getElementById('shareLoading').style.display = 'block';
-            
-            try {{
-                // Create the standalone HTML content using the embedded data
-                const standaloneHTML = createStandaloneHTML();
-                
-                // Create a blob and download it
-                const blob = new Blob([standaloneHTML], {{ type: 'text/html' }});
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'escagcp_report_' + new Date().toISOString().slice(0, 10) + '.html';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                
-                // Show success message
-                document.getElementById('shareLoading').style.display = 'none';
-                document.getElementById('shareSuccess').style.display = 'block';
-                
-                // Close modal after 3 seconds
-                setTimeout(() => {{
-                    closeShareModal();
-                }}, 3000);
-            }} catch (error) {{
-                console.error('Failed to generate report:', error);
-                document.getElementById('shareLoading').innerHTML = 'Failed to generate report. Please try again.';
-            }}
-        }}
-        
-        function createStandaloneHTML() {{
-            // Build the standalone HTML using the embedded data
-            // This version uses a simple table-based visualization that works everywhere
-            return `<!DOCTYPE html>
-<html>
-<head>
-    <title>EscaGCP Security Report - Standalone</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {{
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
-            background-color: #f8f9fa;
-            color: #1a1f36;
-        }}
-        
-        .standalone-header {{
-            background-color: #ffffff;
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }}
-        
-        .standalone-title {{
-            margin: 0 0 10px 0;
-            color: #6b46c1;
-            font-size: 28px;
-            font-weight: 600;
-        }}
-        
-        .standalone-subtitle {{
-            color: #6b7280;
-            font-size: 14px;
-        }}
-        
-        .standalone-stats {{
-            display: flex;
-            gap: 30px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }}
-        
-        .stat-box {{
-            background-color: #f9fafb;
-            padding: 15px 25px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-        }}
-        
-        .stat-value {{
-            font-size: 24px;
-            font-weight: 600;
-            color: #6b46c1;
-        }}
-        
-        .stat-label {{
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 5px;
-        }}
-        
-        .content-section {{
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }}
-        
-        .section-title {{
-            font-size: 20px;
-            font-weight: 600;
-            color: #6b46c1;
-            margin: 30px 0 15px 0;
-        }}
-        
-        .graph-summary {{
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }}
-        
-        .node-table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }}
-        
-        .node-table th {{
-            background-color: #6b46c1;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            font-weight: 600;
-        }}
-        
-        .node-table td {{
-            padding: 10px;
-            border-bottom: 1px solid #e5e7eb;
-        }}
-        
-        .node-table tr:hover {{
-            background-color: #f3f4f6;
-        }}
-        
-        .node-type {{
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            background-color: #e5e7eb;
-            color: #4b5563;
-        }}
-        
-        .edge-list {{
-            margin-top: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 4px;
-            padding: 10px;
-            background-color: white;
-        }}
-        
-        .edge-item {{
-            padding: 5px 0;
-            border-bottom: 1px solid #f3f4f6;
-            font-size: 14px;
-        }}
-        
-        .edge-type {{
-            color: #6b46c1;
-            font-weight: 500;
-        }}
-        
-        .info-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }}
-        
-        .info-card {{
-            background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
-        }}
-        
-        .info-card-title {{
-            font-size: 16px;
-            font-weight: 600;
-            color: #6b46c1;
-            margin-bottom: 15px;
-        }}
-        
-        .risk-item {{
-            background-color: #fef2f2;
-            border-left: 4px solid #dc2626;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }}
-        
-        .risk-high {{ border-left-color: #dc2626; background-color: #fef2f2; }}
-        .risk-medium {{ border-left-color: #f59e0b; background-color: #fef3c7; }}
-        .risk-low {{ border-left-color: #22c55e; background-color: #f0fdf4; }}
-        
-        .footer {{
-            background-color: #f9fafb;
-            padding: 20px;
-            text-align: center;
-            color: #6b7280;
-            font-size: 12px;
-            margin-top: 50px;
-            border-top: 1px solid #e5e7eb;
-        }}
-        
-        @media (max-width: 768px) {{
-            .standalone-stats {{
-                flex-direction: column;
-                gap: 10px;
-            }}
-            
-            .info-grid {{
-                grid-template-columns: 1fr;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="standalone-header">
-        <h1 class="standalone-title">EscaGCP Security Report</h1>
-        <p class="standalone-subtitle">Generated on ${{new Date().toLocaleString()}} | Standalone Report</p>
-        
-        <div class="standalone-stats">
-            <div class="stat-box">
-                <div class="stat-value">${{stats.total_nodes}}</div>
-                <div class="stat-label">Total Nodes</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">${{stats.total_edges}}</div>
-                <div class="stat-label">Total Edges</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">${{stats.attack_paths}}</div>
-                <div class="stat-label">Attack Paths</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">${{stats.high_risk_nodes}}</div>
-                <div class="stat-label">High Risk Nodes</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">${{stats.dangerous_roles}}</div>
-                <div class="stat-label">Dangerous Roles</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="content-section">
-        <h2 class="section-title">Interactive Graph Visualization</h2>
-        <div class="graph-container">
-            <div id="mynetwork"></div>
-        </div>
-        
-        <h2 class="section-title">Key Findings</h2>
-        <div class="info-grid">
-            <div class="info-card">
-                <h3 class="info-card-title">Critical Attack Paths</h3>
-                ${{attackPaths.filter(p => p.risk_score > 0.8).slice(0, 5).map(path => 
-                    `<div class="risk-item risk-high">
-                        <strong>${{path.path}}</strong><br>
-                        Risk Score: ${{path.risk_score.toFixed(2)}}
-                    </div>`
-                ).join('')}}
-            </div>
-            
-            <div class="info-card">
-                <h3 class="info-card-title">Dangerous Role Assignments</h3>
-                ${{Object.entries(dangerousRolesInfo).slice(0, 5).map(([role, holders]) => 
-                    `<div class="risk-item risk-medium">
-                        <strong>${{role}}</strong><br>
-                        Assigned to: ${{holders.length}} identities
-                    </div>`
-                ).join('')}}
-            </div>
-            
-            <div class="info-card">
-                <h3 class="info-card-title">Resource Summary</h3>
-                ${{Object.entries(nodesByType).map(([type, nodes]) => 
-                    `<div style="margin-bottom: 8px;">
-                        <strong>${{type}}:</strong> ${{nodes.length}}
-                    </div>`
-                ).join('')}}
-            </div>
-        </div>
-    </div>
-    
-    <div class="footer">
-        <p>This is a standalone EscaGCP report. All data is embedded in this HTML file.</p>
-        <p>No external dependencies or internet connection required.</p>
-    </div>
-    
-    <script>
-        // Embed the graph data
-        const graphData = ${{JSON.stringify(graphData)}};
-        
-        // Initialize the network
-        const container = document.getElementById('mynetwork');
-        const data = {{
-            nodes: new vis.DataSet(graphData.nodes),
-            edges: new vis.DataSet(graphData.edges)
-        }};
-        
-        const options = {{
-            physics: {{
-                enabled: true,
-                solver: "forceAtlas2Based",
-                forceAtlas2Based: {{
-                    gravitationalConstant: -50,
-                    centralGravity: 0.01,
-                    springLength: 100,
-                    springConstant: 0.08,
-                    damping: 0.09,
-                    avoidOverlap: 0.5
-                }},
-                stabilization: {{
-                    enabled: true,
-                    iterations: 1000,
-                    updateInterval: 25
-                }}
-            }},
-            interaction: {{
-                hover: true,
-                tooltipDelay: 200,
-                hideEdgesOnDrag: true,
-                navigationButtons: true,
-                keyboard: true
-            }},
-            nodes: {{
-                borderWidth: 2,
-                borderWidthSelected: 4,
-                font: {{
-                    face: "Inter, sans-serif",
-                    size: 14,
-                    strokeWidth: 0,
-                    color: "#000000"
-                }}
-            }},
-            edges: {{
-                smooth: {{
-                    type: "continuous",
-                    forceDirection: "none"
-                }},
-                arrows: {{
-                    to: {{
-                        enabled: true,
-                        scaleFactor: 0.5
-                    }}
-                }},
-                font: {{
-                    face: "Inter, sans-serif",
-                    size: 10,
-                    strokeWidth: 0,
-                    color: "#666666"
-                }}
-            }}
-        }};
-        
-        const network = new vis.Network(container, data, options);
-    <\\/script>
-</body>
-</html>`;
-        }}
-        
-        // Close modal when clicking outside
+        // Window click handler to close modals
         window.onclick = function(event) {{
             if (event.target.classList.contains('modal')) {{
-                event.target.style.display = 'none';
-            }}
-            if (event.target.classList.contains('share-modal')) {{
                 event.target.style.display = 'none';
             }}
         }}
@@ -1422,7 +1017,7 @@ class HTMLVisualizer:
                 "borderWidth": 2,
                 "borderWidthSelected": 4,
                 "font": {
-                    "face": "Inter, sans-serif",
+                    "face": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
                     "size": 14,
                     "strokeWidth": 0,
                     "color": "#ffffff"
@@ -1440,7 +1035,7 @@ class HTMLVisualizer:
                     }
                 },
                 "font": {
-                    "face": "Inter, sans-serif",
+                    "face": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
                     "size": 10,
                     "strokeWidth": 0,
                     "color": "#cccccc"
@@ -1799,14 +1394,14 @@ class HTMLVisualizer:
         html = ""
         # Group by category
         by_category = defaultdict(list)
-        for path in attack_paths:
+        for i, path in enumerate(attack_paths):
             category = path.get('category', 'other') if isinstance(path, dict) else 'other'
-            by_category[category].append(path)
+            by_category[category].append((i, path))
         
-        for category, paths in by_category.items():
+        for category, indexed_paths in by_category.items():
             html += f'<div class="legend-title">{category.replace("_", " ").title()}</div>'
-            limit = len(paths) if show_all else 10
-            for path in paths[:limit]:
+            limit = len(indexed_paths) if show_all else 10
+            for idx, path in indexed_paths[:limit]:
                 if isinstance(path, dict):
                     risk = path.get('risk_score', 0)
                     path_str = path.get('path', 'Unknown path')
@@ -1817,7 +1412,7 @@ class HTMLVisualizer:
                 risk_class = 'risk-critical' if risk > 0.8 else 'risk-high' if risk > 0.6 else 'risk-medium' if risk > 0.4 else 'risk-low'
                 
                 html += f"""
-                <div class="path-list-item">
+                <div class="path-list-item clickable" onclick="showAttackPath({idx}, event)" style="cursor: pointer;">
                     {path_str}
                     <span class="path-risk {risk_class}">Risk: {risk:.2f}</span>
                 </div>
@@ -2038,65 +1633,65 @@ class HTMLVisualizer:
     <script>
         // Initialize the network
         const container = document.getElementById('mynetwork');
-        const data = {
+        const data = {{
             nodes: new vis.DataSet(graphData.nodes),
             edges: new vis.DataSet(graphData.edges)
-        };
+        }};
         
-        const options = {
-            physics: {
+        const options = {{
+            physics: {{
                 enabled: true,
                 solver: "forceAtlas2Based",
-                forceAtlas2Based: {
+                forceAtlas2Based: {{
                     gravitationalConstant: -50,
                     centralGravity: 0.01,
                     springLength: 100,
                     springConstant: 0.08,
                     damping: 0.09,
                     avoidOverlap: 0.5
-                },
-                stabilization: {
+                }},
+                stabilization: {{
                     enabled: true,
                     iterations: 1000,
                     updateInterval: 25
-                }
+                }}
             },
-            interaction: {
+            interaction: {{
                 hover: true,
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
                 navigationButtons: true,
                 keyboard: true
-            },
-            nodes: {
+            }},
+            nodes: {{
                 borderWidth: 2,
                 borderWidthSelected: 4,
-                font: {
+                font: {{
                     face: "Inter, sans-serif",
                     size: 14,
                     strokeWidth: 0,
                     color: "#ffffff"
-                }
-            },
-            edges: {
-                smooth: {
+                }}
+            }},
+            edges: {{
+                smooth: {{
                     type: "continuous",
                     forceDirection: "none"
-                },
-                arrows: {
-                    to: {
+                }},
+                arrows: {{
+                    to: {{
                         enabled: true,
                         scaleFactor: 0.5
-                    }
-                },
-                font: {
+                    }}
+                }},
+                font: {{
                     face: "Inter, sans-serif",
                     size: 10,
                     strokeWidth: 0,
                     color: "#cccccc"
-                }
-            }
-        };
+                }}
+            }}
+        }};
         
         const network = new vis.Network(container, data, options);
     </script>
@@ -2709,10 +2304,10 @@ class HTMLVisualizer:
         
         <div class="sidebar">
             <div class="sidebar-tabs">
-                <button class="tab active" onclick="showTab('legend')">Legend</button>
-                <button class="tab" onclick="showTab('attacks')">Attack Paths</button>
-                <button class="tab" onclick="showTab('roles')">Dangerous Roles</button>
-                <button class="tab" onclick="showTab('paths')">Found Paths</button>
+                <button class="tab active" onclick="showTab('legend', event)">Legend</button>
+                <button class="tab" onclick="showTab('attacks', event)">Attack Paths</button>
+                <button class="tab" onclick="showTab('roles', event)">Dangerous Roles</button>
+                <button class="tab" onclick="showTab('paths', event)">Found Paths</button>
             </div>
             
             <div class="sidebar-content">
@@ -3160,7 +2755,7 @@ class HTMLVisualizer:
         const network = new SimpleNetwork(container, graphData, {{}});
         
         // UI Functions
-        function showTab(tabName) {{
+        function showTab(tabName, event) {{
             document.querySelectorAll('.tab-content').forEach(tab => {{
                 tab.classList.add('hidden');
             }});
@@ -3196,4 +2791,1317 @@ class HTMLVisualizer:
 </body>
 </html>
 """
-        return html 
+        return html
+    
+    def render_attack_path_graph(self, attack_path: AttackPath, output_file: str):
+        """
+        Render an interactive visualization for a single attack path
+        
+        Args:
+            attack_path: AttackPath object with visualization metadata
+            output_file: Path to save the HTML file
+        """
+        logger.info(f"Rendering attack path graph to {output_file}")
+        
+        # Get attack graph data
+        graph_data = attack_path.get_attack_graph_data()
+        
+        if not graph_data or not graph_data.get('nodes'):
+            logger.warning("No visualization data available for attack path")
+            return
+        
+        # Create HTML with Cytoscape.js for clean, interactive visualization
+        html_content = self._create_attack_path_html(attack_path, graph_data)
+        
+        # Write to file
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        logger.info(f"Attack path visualization saved to {output_file}")
+    
+    def _create_attack_path_html(self, attack_path: AttackPath, graph_data: Dict[str, Any]) -> str:
+        """Create HTML for attack path visualization using Cytoscape.js"""
+        
+        # Convert nodes and edges to Cytoscape format
+        cy_elements = []
+        
+        # Add nodes
+        for node in graph_data['nodes']:
+            cy_elements.append({
+                'data': {
+                    'id': node['id'],
+                    'label': node['label'],
+                    'type': node['type'],
+                    'icon': node['icon'],
+                    'risk_level': node['risk_level']
+                },
+                'classes': f"node-{node['type']} risk-{node['risk_level']}"
+            })
+        
+        # Add edges
+        for edge in graph_data['edges']:
+            cy_elements.append({
+                'data': {
+                    'id': f"{edge['source']}-{edge['target']}",
+                    'source': edge['source'],
+                    'target': edge['target'],
+                    'label': edge['label'],
+                    'type': edge['type'],
+                    'risk_score': edge['risk_score']
+                },
+                'classes': f"edge-{edge['type']}"
+            })
+        
+        # Generate HTML
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack Path: {graph_data['summary']}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fa;
+            color: #202124;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+        
+        .header {{
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }}
+        
+        .header h1 {{
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #202124;
+        }}
+        
+        .header .summary {{
+            font-size: 16px;
+            color: #5f6368;
+            margin-bottom: 16px;
+        }}
+        
+        .header .metadata {{
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }}
+        
+        .metadata-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        
+        .metadata-item .label {{
+            font-size: 14px;
+            color: #5f6368;
+        }}
+        
+        .metadata-item .value {{
+            font-size: 14px;
+            font-weight: 600;
+            color: #202124;
+        }}
+        
+        .risk-badge {{
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }}
+        
+        .risk-critical {{
+            background: #fce8e6;
+            color: #d33b27;
+        }}
+        
+        .risk-high {{
+            background: #feefc3;
+            color: #f9ab00;
+        }}
+        
+        .risk-medium {{
+            background: #e6f4ea;
+            color: #137333;
+        }}
+        
+        .graph-container {{
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: 600px;
+            position: relative;
+        }}
+        
+        #cy {{
+            width: 100%;
+            height: 100%;
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+        }}
+        
+        .controls {{
+            position: absolute;
+            top: 36px;
+            right: 36px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }}
+        
+        .control-btn {{
+            background: white;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5f6368;
+            cursor: pointer;
+            transition: all 0.2s;
+        }}
+        
+        .control-btn:hover {{
+            background: #f8f9fa;
+            border-color: #5f6368;
+            color: #202124;
+        }}
+        
+        .techniques-container {{
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }}
+        
+        .techniques-container h2 {{
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #202124;
+        }}
+        
+        .technique-list {{
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }}
+        
+        .technique-item {{
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e8eaed;
+        }}
+        
+        .technique-icon {{
+            font-size: 24px;
+            line-height: 1;
+        }}
+        
+        .technique-details {{
+            flex: 1;
+        }}
+        
+        .technique-name {{
+            font-weight: 600;
+            font-size: 14px;
+            color: #202124;
+            margin-bottom: 4px;
+        }}
+        
+        .technique-description {{
+            font-size: 13px;
+            color: #5f6368;
+            margin-bottom: 4px;
+        }}
+        
+        .technique-permission {{
+            font-size: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            color: #137333;
+            background: #e6f4ea;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }}
+        
+        .legend {{
+            position: absolute;
+            bottom: 36px;
+            left: 36px;
+            background: white;
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+        }}
+        
+        .legend-title {{
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #202124;
+        }}
+        
+        .legend-items {{
+            display: flex;
+            gap: 16px;
+        }}
+        
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+        
+        .legend-color {{
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Attack Path Analysis</h1>
+            <div class="summary">{graph_data['summary']}</div>
+            <div class="metadata">
+                <div class="metadata-item">
+                    <span class="label">Path Length:</span>
+                    <span class="value">{graph_data['path_length']} steps</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="label">Risk Score:</span>
+                    <span class="risk-badge risk-{self._get_risk_level(graph_data['risk_score'])}">{graph_data['risk_score']:.2f}</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="label">Techniques:</span>
+                    <span class="value">{len(graph_data['techniques'])}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <div class="controls">
+                <button class="control-btn" onclick="cy.fit()">Fit</button>
+                <button class="control-btn" onclick="cy.center()">Center</button>
+                <button class="control-btn" onclick="downloadImage()">Download</button>
+            </div>
+            <div id="cy"></div>
+            <div class="legend">
+                <div class="legend-title">Node Types</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4285F4"></div>
+                        <span>User</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #34A853"></div>
+                        <span>Service Account</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #EA4335"></div>
+                        <span>Resource</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="techniques-container">
+            <h2>Attack Techniques Used</h2>
+            <div class="technique-list">
+                {self._create_techniques_list_html(graph_data['techniques'])}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize Cytoscape
+        var cy = cytoscape({{
+            container: document.getElementById('cy'),
+            elements: {json.dumps(cy_elements)},
+            style: [
+                {{
+                    selector: 'node',
+                    style: {{
+                        'label': 'data(label)',
+                        'text-valign': 'bottom',
+                        'text-halign': 'center',
+                        'font-family': 'Inter, sans-serif',
+                        'font-size': '12px',
+                        'font-weight': '500',
+                        'text-margin-y': 8,
+                        'width': 60,
+                        'height': 60,
+                        'border-width': 2,
+                        'border-color': '#dadce0',
+                        'background-color': '#ffffff'
+                    }}
+                }},
+                {{
+                    selector: 'node.node-user',
+                    style: {{
+                        'background-color': '#e8f0fe',
+                        'border-color': '#4285F4'
+                    }}
+                }},
+                {{
+                    selector: 'node.node-service_account',
+                    style: {{
+                        'background-color': '#e6f4ea',
+                        'border-color': '#34A853'
+                    }}
+                }},
+                {{
+                    selector: 'node.node-project',
+                    style: {{
+                        'background-color': '#fce8e6',
+                        'border-color': '#EA4335'
+                    }}
+                }},
+                {{
+                    selector: 'node.node-role',
+                    style: {{
+                        'background-color': '#f8f9fa',
+                        'border-color': '#5f6368'
+                    }}
+                }},
+                {{
+                    selector: 'node.risk-critical',
+                    style: {{
+                        'border-width': 3,
+                        'border-color': '#d33b27'
+                    }}
+                }},
+                {{
+                    selector: 'node.risk-high',
+                    style: {{
+                        'border-width': 3,
+                        'border-color': '#f9ab00'
+                    }}
+                }},
+                {{
+                    selector: 'edge',
+                    style: {{
+                        'label': 'data(label)',
+                        'font-family': 'Inter, sans-serif',
+                        'font-size': '11px',
+                        'font-weight': '500',
+                        'text-background-color': '#ffffff',
+                        'text-background-opacity': 0.9,
+                        'text-background-padding': '4px',
+                        'text-border-width': 1,
+                        'text-border-color': '#e8eaed',
+                        'text-border-opacity': 1,
+                        'curve-style': 'bezier',
+                        'target-arrow-shape': 'triangle',
+                        'target-arrow-color': '#5f6368',
+                        'line-color': '#dadce0',
+                        'width': 2,
+                        'arrow-scale': 1.2
+                    }}
+                }},
+                {{
+                    selector: 'edge.edge-can_impersonate_sa',
+                    style: {{
+                        'line-color': '#d33b27',
+                        'target-arrow-color': '#d33b27',
+                        'width': 3
+                    }}
+                }},
+                {{
+                    selector: 'edge.edge-can_create_service_account_key',
+                    style: {{
+                        'line-color': '#ea4335',
+                        'target-arrow-color': '#ea4335',
+                        'width': 3
+                    }}
+                }},
+                {{
+                    selector: 'edge.edge-can_deploy_function_as',
+                    style: {{
+                        'line-color': '#f9ab00',
+                        'target-arrow-color': '#f9ab00',
+                        'width': 3
+                    }}
+                }},
+                {{
+                    selector: 'edge.edge-can_deploy_cloud_run_as',
+                    style: {{
+                        'line-color': '#f9ab00',
+                        'target-arrow-color': '#f9ab00',
+                        'width': 3
+                    }}
+                }},
+                {{
+                    selector: 'edge.edge-has_role',
+                    style: {{
+                        'line-color': '#5f6368',
+                        'target-arrow-color': '#5f6368'
+                    }}
+                }}
+            ],
+            layout: {{
+                name: 'dagre',
+                rankDir: 'LR',
+                nodeSep: 100,
+                rankSep: 150,
+                padding: 50
+            }}
+        }});
+        
+        // Add node icons
+        cy.nodes().forEach(function(node) {{
+            var icon = node.data('icon');
+            if (icon) {{
+                node.style('content', icon);
+                node.style('text-valign', 'bottom');
+                node.style('font-size', '24px');
+            }}
+        }});
+        
+        // Download function
+        function downloadImage() {{
+            var png = cy.png({{
+                output: 'blob',
+                bg: 'white',
+                scale: 2
+            }});
+            
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(png);
+            link.download = 'attack_path.png';
+            link.click();
+        }}
+        
+        // Add interactivity
+        cy.on('tap', 'node', function(evt) {{
+            var node = evt.target;
+            console.log('Node clicked:', node.data());
+        }});
+        
+        cy.on('tap', 'edge', function(evt) {{
+            var edge = evt.target;
+            console.log('Edge clicked:', edge.data());
+        }});
+    </script>
+</body>
+</html>"""
+        
+        return html
+    
+    def _create_techniques_list_html(self, techniques: List[Dict[str, Any]]) -> str:
+        """Create HTML for techniques list"""
+        html_parts = []
+        
+        for i, technique in enumerate(techniques, 1):
+            html_parts.append(f"""
+                <div class="technique-item">
+                    <div class="technique-icon">{technique.get('icon', '🔐')}</div>
+                    <div class="technique-details">
+                        <div class="technique-name">Step {i}: {technique.get('name', 'Unknown')}</div>
+                        <div class="technique-description">{technique.get('description', '')}</div>
+                        <div class="technique-permission">{technique.get('permission', 'Unknown')}</div>
+                    </div>
+                </div>
+            """)
+        
+        return '\n'.join(html_parts)
+    
+    def _get_risk_level(self, risk_score: float) -> str:
+        """Get risk level based on score"""
+        if risk_score >= 0.8:
+            return "critical"
+        elif risk_score >= 0.6:
+            return "high"
+        elif risk_score >= 0.4:
+            return "medium"
+        else:
+            return "low"
+    
+    def _get_dashboard_javascript(self) -> str:
+        """Get the JavaScript code for the dashboard without double braces"""
+        return """
+        // Define all functions first
+        function showTab(tabName, event) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            
+            // Add active class to clicked tab
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+        
+        function showModal(modalType) {
+            document.getElementById(modalType + 'Modal').style.display = 'block';
+        }
+        
+        function closeModal(modalType) {
+            document.getElementById(modalType + 'Modal').style.display = 'none';
+        }
+        
+        function toggleCollapsible(element) {
+            element.classList.toggle('active');
+            const content = element.nextElementSibling;
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+            } else {
+                content.classList.add('show');
+            }
+        }
+        
+        function showShareModal() {
+            document.getElementById('shareModal').style.display = 'block';
+            document.getElementById('shareLoading').style.display = 'none';
+            document.getElementById('shareSuccess').style.display = 'none';
+        }
+        
+        function closeShareModal() {
+            document.getElementById('shareModal').style.display = 'none';
+        }
+        
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const arrow = event.target.querySelector('.arrow') || event.target;
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                arrow.textContent = '▶';
+            }
+        }
+        
+        function generateStandaloneReport() {
+            document.getElementById('shareLoading').style.display = 'block';
+            
+            try {
+                // Create the standalone HTML content using the embedded data
+                const standaloneHTML = createStandaloneHTML();
+                
+                // Create a blob and download it
+                const blob = new Blob([standaloneHTML], { type: 'text/html' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'escagcp_report_' + new Date().toISOString().slice(0, 10) + '.html';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Show success message
+                document.getElementById('shareLoading').style.display = 'none';
+                document.getElementById('shareSuccess').style.display = 'block';
+                
+                // Close modal after 3 seconds
+                setTimeout(() => {
+                    closeShareModal();
+                }, 3000);
+            } catch (error) {
+                console.error('Failed to generate report:', error);
+                document.getElementById('shareLoading').innerHTML = 'Failed to generate report. Please try again.';
+            }
+        }
+        
+        function createStandaloneHTML() {
+            // Build the standalone HTML using the embedded data
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>EscaGCP Security Report - Standalone</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"><\/script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #1a1f36;
+            line-height: 1.6;
+        }
+        
+        .standalone-header {
+            background-color: #ffffff;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .standalone-title {
+            margin: 0 0 10px 0;
+            color: #6b46c1;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .standalone-subtitle {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .standalone-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-box {
+            background-color: #f9fafb;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #6b46c1;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .content-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #6b46c1;
+            margin: 30px 0 15px 0;
+        }
+        
+        .graph-container {
+            height: 600px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 20px 0;
+            background-color: #222222;
+        }
+        
+        #mynetwork {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .info-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #6b46c1;
+            margin-bottom: 15px;
+        }
+        
+        .risk-item {
+            background-color: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        
+        .risk-high { border-left-color: #dc2626; background-color: #fef2f2; }
+        .risk-medium { border-left-color: #f59e0b; background-color: #fef3c7; }
+        .risk-low { border-left-color: #22c55e; background-color: #f0fdf4; }
+        
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 50px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        @media (max-width: 768px) {
+            .standalone-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="standalone-header">
+        <h1 class="standalone-title">EscaGCP Security Report</h1>
+        <p class="standalone-subtitle">Generated on ${new Date().toLocaleString()} | Standalone Report</p>
+        
+        <div class="standalone-stats">
+            <div class="stat-box">
+                <div class="stat-value">${stats.total_nodes}</div>
+                <div class="stat-label">Total Nodes</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">${stats.total_edges}</div>
+                <div class="stat-label">Total Edges</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">${stats.attack_paths}</div>
+                <div class="stat-label">Attack Paths</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">${stats.high_risk_nodes}</div>
+                <div class="stat-label">High Risk Nodes</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">${stats.dangerous_roles}</div>
+                <div class="stat-label">Dangerous Roles</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="content-section">
+        <h2 class="section-title">Interactive Graph Visualization</h2>
+        <div class="graph-container">
+            <div id="mynetwork"></div>
+        </div>
+        
+        <h2 class="section-title">Key Findings</h2>
+        <div class="info-grid">
+            <div class="info-card">
+                <h3 class="info-card-title">Critical Attack Paths</h3>
+                ${attackPaths.filter(p => p.risk_score > 0.8).slice(0, 5).map(path => 
+                    `<div class="risk-item risk-high">
+                        <strong>${path.path}</strong><br>
+                        Risk Score: ${path.risk_score.toFixed(2)}
+                    </div>`
+                ).join('')}
+            </div>
+            
+            <div class="info-card">
+                <h3 class="info-card-title">Dangerous Role Assignments</h3>
+                ${Object.entries(dangerousRolesInfo).slice(0, 5).map(([role, holders]) => 
+                    `<div class="risk-item risk-medium">
+                        <strong>${role}</strong><br>
+                        Assigned to: ${holders.length} identities
+                    </div>`
+                ).join('')}
+            </div>
+            
+            <div class="info-card">
+                <h3 class="info-card-title">Resource Summary</h3>
+                ${Object.entries(nodesByType).map(([type, nodes]) => 
+                    `<div style="margin-bottom: 8px;">
+                        <strong>${type}:</strong> ${nodes.length}
+                    </div>`
+                ).join('')}
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>This is a standalone EscaGCP report. All data is embedded in this HTML file.</p>
+        <p>No external dependencies or internet connection required.</p>
+    </div>
+    
+    <script>
+        // Embed the graph data
+        const graphData = ${JSON.stringify(graphData)};
+        
+        // Initialize the network
+        const container = document.getElementById('mynetwork');
+        const data = {
+            nodes: new vis.DataSet(graphData.nodes),
+            edges: new vis.DataSet(graphData.edges)
+        };
+        
+        const options = {
+            physics: {
+                enabled: true,
+                solver: "forceAtlas2Based",
+                forceAtlas2Based: {
+                    gravitationalConstant: -50,
+                    centralGravity: 0.01,
+                    springLength: 100,
+                    springConstant: 0.08,
+                    damping: 0.09,
+                    avoidOverlap: 0.5
+                },
+                stabilization: {
+                    enabled: true,
+                    iterations: 1000,
+                    updateInterval: 25
+                }
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 200,
+                hideEdgesOnDrag: true,
+                navigationButtons: true,
+                keyboard: true
+            },
+            nodes: {
+                borderWidth: 2,
+                borderWidthSelected: 4,
+                font: {
+                    face: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                    size: 14,
+                    strokeWidth: 0,
+                    color: "#ffffff"
+                }
+            },
+            edges: {
+                smooth: {
+                    type: "continuous",
+                    forceDirection: "none"
+                },
+                arrows: {
+                    to: {
+                        enabled: true,
+                        scaleFactor: 0.5
+                    }
+                },
+                font: {
+                    face: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                    size: 10,
+                    strokeWidth: 0,
+                    color: "#cccccc"
+                }
+            }
+        };
+        
+        const network = new vis.Network(container, data, options);
+    <\/script>
+</body>
+</html>`;
+            return html;
+        }
+        
+        function showAttackPath(pathIndex, event) {
+            if (event) event.stopPropagation();
+            
+            console.log('showAttackPath called with index:', pathIndex);
+            console.log('Attack paths array:', attackPaths);
+            
+            // Get the attack path data
+            const path = attackPaths[pathIndex];
+            if (!path) {
+                console.error('Attack path not found:', pathIndex);
+                return;
+            }
+            
+            console.log('Attack path data:', path);
+            console.log('Has visualization_metadata:', !!path.visualization_metadata);
+            
+            // Check if path has visualization data
+            if (path.visualization_metadata) {
+                console.log('Calling showAttackPathModal');
+                // Show attack path modal with visualization
+                showAttackPathModal(path);
+            } else {
+                console.log('No visualization_metadata, showing alert');
+                // Show simple path details
+                alert('Attack Path Details:\\n\\n' + (path.path || path.description || 'No details available'));
+            }
+        }
+        
+        function showAttackPathModal(pathData) {
+            console.log('Attack path data:', pathData);
+            
+            // Create or update the attack path modal
+            let modal = document.getElementById('attackPathModal');
+            if (!modal) {
+                // Create modal if it doesn't exist
+                modal = document.createElement('div');
+                modal.id = 'attackPathModal';
+                modal.className = 'modal';
+                modal.style.cssText = 'display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8);';
+                document.body.appendChild(modal);
+            }
+            
+            // Create modal content with attack path visualization
+            const vizData = pathData.visualization_metadata || {};
+            const nodeMetadata = vizData.node_metadata || [];
+            const edgeMetadata = vizData.edge_metadata || [];
+            const techniques = vizData.techniques || vizData.escalation_techniques || [];
+            
+            console.log('Visualization data:', vizData);
+            console.log('Nodes:', nodeMetadata);
+            console.log('Edges:', edgeMetadata);
+            
+            // Convert nodes to vis.js format
+            const visNodes = nodeMetadata.map((node, index) => {
+                console.log(`Processing node ${index}:`, node);
+                const visNode = {
+                    id: node.id,
+                    label: node.label || node.id,
+                    title: `<div style="padding: 10px;">
+                        <strong>${node.label || node.id}</strong><br>
+                        Type: ${node.type}<br>
+                        Risk: ${node.risk_level || 'unknown'}
+                    </div>`,
+                    shape: 'box',
+                    color: {
+                        background: node.color || '#6b46c1',
+                        border: node.risk_level === 'critical' ? '#dc2626' : 
+                               node.risk_level === 'high' ? '#f59e0b' : '#6b46c1',
+                        highlight: {
+                            background: '#8b5cf6',
+                            border: '#6b46c1'
+                        }
+                    },
+                    borderWidth: node.risk_level === 'critical' || node.risk_level === 'high' ? 3 : 2,
+                    font: {
+                        color: '#ffffff',
+                        face: 'Inter, sans-serif'
+                    },
+                    level: index  // Add level for hierarchical layout
+                };
+                console.log(`Created vis node:`, visNode);
+                return visNode;
+            });
+            
+            // Convert edges to vis.js format
+            const visEdges = edgeMetadata.map((edge, index) => {
+                console.log(`Processing edge ${index}:`, edge);
+                const visEdge = {
+                    from: edge.source,
+                    to: edge.target,
+                    label: edge.label || edge.type || '',
+                    title: `<div style="padding: 10px;">
+                        <strong>${edge.label || edge.type || 'Connection'}</strong><br>
+                        Risk Score: ${(edge.risk_score || 0).toFixed(2)}
+                    </div>`,
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            scaleFactor: 1
+                        }
+                    },
+                    color: {
+                        color: edge.risk_score > 0.8 ? '#dc2626' :
+                               edge.risk_score > 0.6 ? '#f59e0b' : '#6b46c1',
+                        highlight: '#8b5cf6'
+                    },
+                    width: edge.risk_score > 0.8 ? 3 : 2,
+                    font: {
+                        color: '#ffffff',
+                        strokeWidth: 3,
+                        strokeColor: '#1a1a1a',
+                        face: 'Inter, sans-serif',
+                        size: 12
+                    }
+                };
+                console.log(`Created vis edge:`, visEdge);
+                return visEdge;
+            });
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="background-color: #1a1a1a; margin: 2% auto; padding: 20px; width: 90%; max-width: 1200px; border-radius: 8px; position: relative;">
+                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 class="modal-title" style="color: #fff; margin: 0;">Attack Path Visualization</h2>
+                        <span class="close" onclick="document.getElementById('attackPathModal').style.display='none'" style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 20px; height: 600px;">
+                        <div style="position: relative; background-color: #222; border: 1px solid #444; border-radius: 4px; min-height: 500px;">
+                            <div id="attackPathNetwork" style="width: 100%; height: 100%; min-height: 500px;"></div>
+                        </div>
+                        <div style="background-color: #2a2a2a; border: 1px solid #444; border-radius: 4px; padding: 15px; overflow-y: auto;">
+                            <h3 style="color: #fff; margin-top: 0;">Path Details</h3>
+                            <div style="color: #ccc; font-size: 14px;">
+                                <p><strong>Risk Score:</strong> <span style="color: ${pathData.risk_score > 0.8 ? '#dc2626' : pathData.risk_score > 0.6 ? '#f59e0b' : '#22c55e'}">${(pathData.risk_score || 0).toFixed(2)}</span></p>
+                                <p><strong>Path Length:</strong> ${pathData.length || 0} steps</p>
+                                ${pathData.description ? `<p><strong>Description:</strong><br>${pathData.description}</p>` : ''}
+                                
+                                ${techniques.length > 0 ? `
+                                    <h4 style="color: #fff; margin-top: 20px;">Attack Techniques:</h4>
+                                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        ${techniques.map(t => `
+                                            <div style="background: #333; padding: 10px; border-radius: 4px; border-left: 3px solid #6b46c1;">
+                                                <div style="font-weight: 600; margin-bottom: 4px;">${t.icon || '🔐'} ${t.name || t.technique || 'Unknown'}</div>
+                                                ${t.description ? `<div style="font-size: 12px; color: #999; margin-bottom: 4px;">${t.description}</div>` : ''}
+                                                ${t.permission ? `<div style="font-size: 11px; font-family: monospace; color: #22c55e;">${t.permission}</div>` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                                
+                                ${vizData.permissions_used && vizData.permissions_used.length > 0 ? `
+                                    <h4 style="color: #fff; margin-top: 20px;">Permissions Used:</h4>
+                                    <ul style="padding-left: 20px; font-size: 12px; font-family: monospace;">
+                                        ${vizData.permissions_used.map(p => `<li style="color: #22c55e;">${p}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Show modal
+            modal.style.display = 'block';
+            console.log('Modal displayed, style:', modal.style.display);
+            console.log('Modal dimensions:', modal.offsetWidth, 'x', modal.offsetHeight);
+            
+            // Function to create the attack path network
+            const createAttackPathNetwork = () => {
+                const container = document.getElementById('attackPathNetwork');
+                console.log('Container found:', !!container);
+                console.log('Nodes to visualize:', visNodes.length);
+                console.log('Edges to visualize:', visEdges.length);
+                console.log('vis object available:', typeof vis !== 'undefined');
+                console.log('vis.DataSet available:', typeof vis !== 'undefined' && typeof vis.DataSet !== 'undefined');
+                console.log('vis.Network available:', typeof vis !== 'undefined' && typeof vis.Network !== 'undefined');
+                
+                if (!container) {
+                    console.error('Container not found');
+                    return;
+                }
+                
+                if (visNodes.length === 0) {
+                    console.warn('No nodes found, creating test data');
+                    // Create test data to verify vis.js works
+                    visNodes.push(
+                        {id: 'test1', label: 'Test Node 1', color: '#6b46c1', shape: 'box'},
+                        {id: 'test2', label: 'Test Node 2', color: '#34A853', shape: 'box'}
+                    );
+                    visEdges.push(
+                        {from: 'test1', to: 'test2', label: 'Test Edge', arrows: {to: {enabled: true}}}
+                    );
+                }
+                
+                // Clear any existing network
+                container.innerHTML = '';
+                
+                // Check if vis is available
+                if (typeof vis === 'undefined') {
+                    console.error('vis.js library not loaded, attempting to load dynamically');
+                    
+                    // Try to load vis.js dynamically
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js';
+                    script.onload = () => {
+                        console.log('vis.js loaded dynamically');
+                        // Retry creating the network after vis.js loads
+                        createAttackPathNetwork();
+                    };
+                    script.onerror = () => {
+                        console.error('Failed to load vis.js dynamically');
+                        container.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 50px;">Error: Failed to load visualization library. Please refresh the page.</div>';
+                    };
+                    document.head.appendChild(script);
+                    return;
+                }
+                
+                try {
+                    console.log('Creating vis.DataSet with nodes:', visNodes);
+                    console.log('Creating vis.DataSet with edges:', visEdges);
+                    
+                    const nodesDataSet = new vis.DataSet(visNodes);
+                    const edgesDataSet = new vis.DataSet(visEdges);
+                    
+                    console.log('Nodes DataSet created:', nodesDataSet);
+                    console.log('Edges DataSet created:', edgesDataSet);
+                    
+                    const data = {
+                        nodes: nodesDataSet,
+                        edges: edgesDataSet
+                    };
+                    
+                    console.log('Data object created:', data);
+                    
+                    const options = {
+                        physics: {
+                            enabled: true,
+                            solver: "barnesHut",
+                            barnesHut: {
+                                gravitationalConstant: -2000,
+                                centralGravity: 0.3,
+                                springLength: 95,
+                                springConstant: 0.04,
+                                damping: 0.09,
+                                avoidOverlap: 0.5
+                            },
+                            stabilization: {
+                                enabled: true,
+                                iterations: 200,
+                                updateInterval: 10
+                            }
+                        },
+                        interaction: {
+                            hover: true,
+                            tooltipDelay: 200,
+                            navigationButtons: true,
+                            keyboard: true
+                        },
+                        layout: {
+                            improvedLayout: false,
+                            hierarchical: false  // Disable hierarchical layout for now
+                        },
+                        nodes: {
+                            font: {
+                                face: "Inter, sans-serif",
+                                size: 14,
+                                color: "#ffffff"
+                            },
+                            borderWidth: 2,
+                            borderWidthSelected: 4
+                        },
+                        edges: {
+                            smooth: {
+                                type: "continuous",
+                                roundness: 0.5
+                            },
+                            arrows: {
+                                to: {
+                                    enabled: true,
+                                    scaleFactor: 1
+                                }
+                            },
+                            font: {
+                                face: "Inter, sans-serif",
+                                size: 12,
+                                color: "#ffffff",
+                                strokeWidth: 3,
+                                strokeColor: "#1a1a1a"
+                            }
+                        },
+                        height: '100%',
+                        width: '100%',
+                        autoResize: true
+                    };
+                    
+                    console.log('Creating vis.Network with container:', container);
+                    console.log('Container dimensions:', container.offsetWidth, 'x', container.offsetHeight);
+                    console.log('Container client dimensions:', container.clientWidth, 'x', container.clientHeight);
+                    console.log('Container computed style:', window.getComputedStyle(container).width, 'x', window.getComputedStyle(container).height);
+                    console.log('Options:', options);
+                    
+                    // Ensure container has dimensions
+                    if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+                        console.warn('Container has zero dimensions, setting explicit size');
+                        container.style.width = '800px';
+                        container.style.height = '500px';
+                    }
+                    
+                    const network = new vis.Network(container, data, options);
+                    
+                    console.log('Network created:', network);
+                    
+                    // Store network instance for debugging
+                    window.attackPathNetwork = network;
+                    
+                    // Fit the network after stabilization
+                    network.once('stabilizationIterationsDone', function () {
+                        network.fit({
+                            animation: {
+                                duration: 500,
+                                easingFunction: 'easeInOutQuad'
+                            }
+                        });
+                    });
+                    
+                    // Add resize handler
+                    const resizeObserver = new ResizeObserver(() => {
+                        network.redraw();
+                        network.fit();
+                    });
+                    resizeObserver.observe(container);
+                    
+                    // Clean up observer when modal closes
+                    const modalElement = document.getElementById('attackPathModal');
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.attributeName === 'style' && modalElement.style.display === 'none') {
+                                resizeObserver.disconnect();
+                            }
+                        });
+                    });
+                    observer.observe(modalElement, { attributes: true });
+                    
+                    console.log('Network created successfully');
+                } catch (error) {
+                    console.error('Error creating network:', error);
+                    container.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 50px;">Error creating visualization: ' + error.message + '</div>';
+                }
+            };
+            
+            // Call the function after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                // Force a reflow to ensure modal is rendered
+                modal.offsetHeight;
+                createAttackPathNetwork();
+            }, 200);
+        }
+        
+        // Window click handler to close modals
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+            if (event.target.id === 'shareModal') {
+                closeShareModal();
+            }
+        }
+        """

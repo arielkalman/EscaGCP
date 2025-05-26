@@ -159,8 +159,9 @@ def build_graph(config, input, output):
 @click.option('--graph', '-g', help='Graph file path or pattern (e.g., graph/*.json)')
 @click.option('--output', '-o', default='findings/', help='Output directory')
 @click.option('--format', type=click.Choice(['json', 'html', 'text']), default='json')
+@click.option('--visualize-attack-paths', is_flag=True, help='Generate individual visualizations for each attack path')
 @click.pass_obj
-def analyze(config, graph, output, format):
+def analyze(config, graph, output, format, visualize_attack_paths):
     """Analyze graph for attack paths"""
     try:
         # Handle graph file selection
@@ -232,8 +233,19 @@ def analyze(config, graph, output, format):
         
         if format == 'json':
             output_file = output_path / f"escagcp_analysis_{timestamp}.json"
+            # Convert attack paths to dictionaries to preserve visualization metadata
+            serializable_results = results.copy()
+            serializable_results['attack_paths'] = {}
+            for category, paths in results['attack_paths'].items():
+                serializable_results['attack_paths'][category] = []
+                for path in paths:
+                    if hasattr(path, 'to_dict'):
+                        serializable_results['attack_paths'][category].append(path.to_dict())
+                    else:
+                        serializable_results['attack_paths'][category].append(str(path))
+            
             with open(output_file, 'w') as f:
-                json.dump(results, f, indent=2, default=str)
+                json.dump(serializable_results, f, indent=2, default=str)
         
         elif format == 'html':
             # Create HTML report
@@ -258,6 +270,41 @@ def analyze(config, graph, output, format):
             click.echo("\nTop critical attack paths:")
             for i, path in enumerate(critical_paths[:5]):
                 click.echo(f"  {i+1}. {path['path']} (risk: {path['risk_score']:.2f})")
+        
+        # Generate individual attack path visualizations if requested
+        if visualize_attack_paths and config.visualization.attack_path_graphs:
+            click.echo("\nGenerating attack path visualizations...")
+            from .visualizers import HTMLVisualizer
+            visualizer = HTMLVisualizer(nx_graph, config)
+            
+            # Create attack paths directory
+            attack_paths_dir = output_path / 'attack_paths'
+            attack_paths_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generate visualization for each attack path
+            path_count = 0
+            for category, paths in results['attack_paths'].items():
+                for i, path_data in enumerate(paths):
+                    # Convert path data to AttackPath object if needed
+                    if hasattr(path_data, 'get_attack_graph_data'):
+                        attack_path = path_data
+                    else:
+                        # Skip if not a proper AttackPath object
+                        continue
+                    
+                    # Generate filename
+                    safe_category = category.replace(' ', '_').lower()
+                    output_file = attack_paths_dir / f"{safe_category}_path_{i+1}_{timestamp}.html"
+                    
+                    # Create visualization
+                    try:
+                        visualizer.render_attack_path_graph(attack_path, str(output_file))
+                        path_count += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to visualize path {i+1} in {category}: {e}")
+            
+            if path_count > 0:
+                click.echo(f"  Generated {path_count} attack path visualizations in {attack_paths_dir}")
         
     except Exception as e:
         logger.error(f"Analysis failed: {e}")
@@ -343,51 +390,163 @@ def visualize(config, graph, output, viz_type, format):
                 visualizer.create_full_graph(str(output_file))
             
             elif viz_type == 'attack-paths':
-                # Need to run analysis first
-                analyzer = PathAnalyzer(nx_graph, config)
-                results = analyzer.analyze_all_paths()
-                
-                # Convert attack paths to simple format for dashboard
+                # Try to load existing analysis results first
+                findings_files = list(Path('findings').glob('escagcp_analysis_*.json'))
                 attack_paths = []
-                for category, paths in results['attack_paths'].items():
-                    for path in paths:
-                        attack_paths.append({
-                            'category': category,
-                            'path': path.get_path_string() if hasattr(path, 'get_path_string') else str(path),
-                            'risk_score': path.risk_score if hasattr(path, 'risk_score') else 0,
-                            'length': len(path) if hasattr(path, '__len__') else 0
-                        })
+                risk_scores = {}
+                critical_nodes = []
+                
+                if findings_files:
+                    # Use the latest findings file
+                    latest_findings = max(findings_files, key=lambda f: f.stat().st_mtime)
+                    click.echo(f"Loading analysis from: {latest_findings}")
+                    
+                    with open(latest_findings, 'r') as f:
+                        findings_data = json.load(f)
+                    
+                    # Extract attack paths with visualization metadata
+                    for category, paths in findings_data.get('attack_paths', {}).items():
+                        for path in paths:
+                            if isinstance(path, dict):
+                                # Generate path string from nodes if not present
+                                path_str = path.get('path', '')
+                                if not path_str and 'path_nodes' in path:
+                                    # Build path string from nodes
+                                    nodes = path['path_nodes']
+                                    edges = path.get('path_edges', [])
+                                    path_parts = []
+                                    for i in range(len(nodes)):
+                                        path_parts.append(nodes[i].get('name', nodes[i].get('id', 'Unknown')))
+                                        if i < len(edges):
+                                            edge_type = edges[i].get('type', 'connects to')
+                                            path_parts.append(f"--[{edge_type}]-->")
+                                    path_str = " ".join(path_parts)
+                                
+                                path_dict = {
+                                    'category': category,
+                                    'path': path_str or 'Unknown path',
+                                    'risk_score': path.get('risk_score', 0),
+                                    'length': path.get('length', 0),
+                                    'description': path.get('description', '')
+                                }
+                                # Preserve visualization metadata
+                                if 'visualization_metadata' in path:
+                                    path_dict['visualization_metadata'] = path['visualization_metadata']
+                                attack_paths.append(path_dict)
+                    
+                    risk_scores = findings_data.get('risk_scores', {})
+                    critical_nodes = findings_data.get('critical_nodes', [])
+                else:
+                    # No findings file, run analysis
+                    click.echo("No findings file found, running analysis...")
+                    analyzer = PathAnalyzer(nx_graph, config)
+                    results = analyzer.analyze_all_paths()
+                    
+                    # Convert attack paths to format for dashboard, preserving visualization metadata
+                    for category, paths in results['attack_paths'].items():
+                        for path in paths:
+                            path_dict = {
+                                'category': category,
+                                'path': path.get_path_string() if hasattr(path, 'get_path_string') else str(path),
+                                'risk_score': path.risk_score if hasattr(path, 'risk_score') else 0,
+                                'length': len(path) if hasattr(path, '__len__') else 0
+                            }
+                            # Preserve visualization metadata if available
+                            if hasattr(path, 'visualization_metadata') and path.visualization_metadata:
+                                path_dict['visualization_metadata'] = path.visualization_metadata
+                            if hasattr(path, 'description') and path.description:
+                                path_dict['description'] = path.description
+                            attack_paths.append(path_dict)
+                    
+                    risk_scores = results['risk_scores']
+                    critical_nodes = results.get('critical_nodes', [])
                 
                 output_file = output_path / f"escagcp_attack_paths_{timestamp}.html"
                 visualizer.create_full_graph(
                     str(output_file),
-                    risk_scores=results['risk_scores'],
+                    risk_scores=risk_scores,
                     attack_paths=attack_paths,
-                    highlight_nodes=set(n['node_id'] for n in results.get('critical_nodes', []))
+                    highlight_nodes=set(n['node_id'] for n in critical_nodes)
                 )
             
             elif viz_type == 'risk':
-                # Run analysis for risk scores
-                analyzer = PathAnalyzer(nx_graph, config)
-                results = analyzer.analyze_all_paths()
-                
-                # Convert attack paths to simple format
+                # Try to load existing analysis results first
+                findings_files = list(Path('findings').glob('escagcp_analysis_*.json'))
                 attack_paths = []
-                for category, paths in results['attack_paths'].items():
-                    for path in paths:
-                        attack_paths.append({
-                            'category': category,
-                            'path': path.get_path_string() if hasattr(path, 'get_path_string') else str(path),
-                            'risk_score': path.risk_score if hasattr(path, 'risk_score') else 0,
-                            'length': len(path) if hasattr(path, '__len__') else 0
-                        })
+                risk_scores = {}
+                critical_nodes = []
+                
+                if findings_files:
+                    # Use the latest findings file
+                    latest_findings = max(findings_files, key=lambda f: f.stat().st_mtime)
+                    click.echo(f"Loading analysis from: {latest_findings}")
+                    
+                    with open(latest_findings, 'r') as f:
+                        findings_data = json.load(f)
+                    
+                    # Extract attack paths with visualization metadata
+                    for category, paths in findings_data.get('attack_paths', {}).items():
+                        for path in paths:
+                            if isinstance(path, dict):
+                                # Generate path string from nodes if not present
+                                path_str = path.get('path', '')
+                                if not path_str and 'path_nodes' in path:
+                                    # Build path string from nodes
+                                    nodes = path['path_nodes']
+                                    edges = path.get('path_edges', [])
+                                    path_parts = []
+                                    for i in range(len(nodes)):
+                                        path_parts.append(nodes[i].get('name', nodes[i].get('id', 'Unknown')))
+                                        if i < len(edges):
+                                            edge_type = edges[i].get('type', 'connects to')
+                                            path_parts.append(f"--[{edge_type}]-->")
+                                    path_str = " ".join(path_parts)
+                                
+                                path_dict = {
+                                    'category': category,
+                                    'path': path_str or 'Unknown path',
+                                    'risk_score': path.get('risk_score', 0),
+                                    'length': path.get('length', 0),
+                                    'description': path.get('description', '')
+                                }
+                                # Preserve visualization metadata
+                                if 'visualization_metadata' in path:
+                                    path_dict['visualization_metadata'] = path['visualization_metadata']
+                                attack_paths.append(path_dict)
+                    
+                    risk_scores = findings_data.get('risk_scores', {})
+                    critical_nodes = findings_data.get('critical_nodes', [])
+                else:
+                    # No findings file, run analysis
+                    click.echo("No findings file found, running analysis...")
+                    analyzer = PathAnalyzer(nx_graph, config)
+                    results = analyzer.analyze_all_paths()
+                    
+                    # Convert attack paths to format for dashboard, preserving visualization metadata
+                    for category, paths in results['attack_paths'].items():
+                        for path in paths:
+                            path_dict = {
+                                'category': category,
+                                'path': path.get_path_string() if hasattr(path, 'get_path_string') else str(path),
+                                'risk_score': path.risk_score if hasattr(path, 'risk_score') else 0,
+                                'length': len(path) if hasattr(path, '__len__') else 0
+                            }
+                            # Preserve visualization metadata if available
+                            if hasattr(path, 'visualization_metadata') and path.visualization_metadata:
+                                path_dict['visualization_metadata'] = path.visualization_metadata
+                            if hasattr(path, 'description') and path.description:
+                                path_dict['description'] = path.description
+                            attack_paths.append(path_dict)
+                    
+                    risk_scores = results['risk_scores']
+                    critical_nodes = results.get('critical_nodes', [])
                 
                 output_file = output_path / f"escagcp_risk_graph_{timestamp}.html"
                 visualizer.create_full_graph(
                     str(output_file),
-                    risk_scores=results['risk_scores'],
+                    risk_scores=risk_scores,
                     attack_paths=attack_paths,
-                    highlight_nodes=set(n['node_id'] for n in results.get('critical_nodes', []))
+                    highlight_nodes=set(n['node_id'] for n in critical_nodes)
                 )
         
         elif format == 'graphml':
@@ -803,13 +962,13 @@ def run(config, lazy, projects, open_browser):
             sys.exit(1)
     else:
         # Show help for manual execution
-        click.echo("EscaGCP - Run operations manually or use --lazy for automatic execution")
+        click.echo("GCPHound - Run operations manually or use --lazy for automatic execution")
         click.echo("\nManual execution steps:")
-        click.echo("1. escagcp collect --projects $(gcloud config get-value project)")
-        click.echo("2. escagcp build-graph --input data/ --output graph/")
-        click.echo("3. escagcp analyze --graph graph/escagcp_graph_*.json --output findings/")
-        click.echo("4. escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/")
-        click.echo("\nOr simply run: escagcp run --lazy")
+        click.echo("1. gcphound collect --projects $(gcloud config get-value project)")
+        click.echo("2. gcphound build-graph --input data/ --output graph/")
+        click.echo("3. gcphound analyze --graph graph/escagcp_graph_*.json --output findings/")
+        click.echo("4. gcphound visualize --graph graph/escagcp_graph_*.json --output visualizations/")
+        click.echo("\nOr simply run: gcphound run --lazy")
 
 
 @cli.command()
