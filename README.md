@@ -24,7 +24,7 @@ escagcp visualize --graph graph/escagcp_graph_*.json
 
 The tool will generate an interactive dashboard like this:
 
-<img src="image.png" alt="EscaGCP Dashboard" width="600"/>
+<img src="/docs/screenshots/image.png" alt="EscaGCP Dashboard" width="600"/>
 
 ## 📸 Screenshots
 
