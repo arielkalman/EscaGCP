@@ -174,23 +174,52 @@ class PathAnalyzer:
                 else:
                     self._attack_paths['medium'].append(attack_path)
         
-        # Also find multi-hop paths
-        identity_nodes = [n for n in self.graph.nodes() if n.startswith(('user:', 'sa:', 'group:'))]
-        high_value_targets = [n for n in self.graph.nodes() if n.startswith(('org:', 'folder:', 'project:'))]
+        # Find multi-hop paths - this is critical for detecting chained attacks
+        logger.info("Finding multi-hop privilege escalation paths")
         
+        # Get all identity nodes (potential attackers)
+        identity_nodes = [n for n in self.graph.nodes() if n.startswith(('user:', 'sa:', 'group:'))]
+        
+        # Get all high-value nodes (service accounts with privileges, high-value resources)
+        high_value_nodes = []
+        for node_id, node_data in self.graph.nodes(data=True):
+            # Include service accounts
+            if node_id.startswith('sa:'):
+                high_value_nodes.append(node_id)
+            # Include roles
+            elif node_id.startswith('role:') and any(r in node_id for r in self.HIGH_VALUE_ROLES):
+                high_value_nodes.append(node_id)
+            # Include resources
+            elif node_id.startswith(('project:', 'folder:', 'org:')):
+                high_value_nodes.append(node_id)
+        
+        logger.info(f"Checking paths from {len(identity_nodes)} identities to {len(high_value_nodes)} high-value targets")
+        
+        # Find paths between identities and high-value targets
+        multi_step_count = 0
         for identity in identity_nodes:
-            for target in high_value_targets:
+            for target in high_value_nodes:
+                if identity == target:
+                    continue
+                    
                 try:
-                    paths = nx.all_simple_paths(
+                    # Find all simple paths up to max length
+                    paths = list(nx.all_simple_paths(
                         self.graph,
                         identity,
                         target,
                         cutoff=self.config.analysis_max_path_length
-                    )
+                    ))
                     
                     for path in paths:
-                        # Check if path contains escalation edges
-                        has_escalation = False
+                        if len(path) < 2:  # Skip invalid paths
+                            continue
+                            
+                        # Count escalation steps in this path
+                        escalation_count = 0
+                        escalation_types = []
+                        escalation_edges_in_path = []
+                        
                         for i in range(len(path) - 1):
                             edge_data = self.graph.get_edge_data(path[i], path[i + 1])
                             if edge_data:
@@ -199,18 +228,48 @@ class PathAnalyzer:
                                     try:
                                         edge_type = EdgeType(edge_type_str)
                                         if edge_type in self.ESCALATION_EDGE_TYPES:
-                                            has_escalation = True
-                                            break
+                                            escalation_count += 1
+                                            escalation_types.append(edge_type.value)
+                                            escalation_edges_in_path.append((path[i], path[i + 1], edge_type))
                                     except ValueError:
                                         continue
                         
-                        if has_escalation:
+                        # Multi-step attacks are critical
+                        if escalation_count >= 2:
+                            attack_path = self._build_attack_path(path)
+                            if attack_path:
+                                # Set high risk score for multi-step attacks
+                                attack_path.risk_score = min(0.85 + (escalation_count - 2) * 0.05, 1.0)
+                                
+                                # Build detailed description
+                                step_descriptions = []
+                                for j, (src, tgt, etype) in enumerate(escalation_edges_in_path):
+                                    step_descriptions.append(f"Step {j+1}: {etype.value}")
+                                
+                                attack_path.description = f"Multi-step attack ({escalation_count} steps): {' → '.join(step_descriptions)}"
+                                
+                                # Add to critical multi-step category
+                                if 'critical_multi_step' not in self._attack_paths:
+                                    self._attack_paths['critical_multi_step'] = []
+                                self._attack_paths['critical_multi_step'].append(attack_path)
+                                multi_step_count += 1
+                                
+                                # Log for debugging
+                                logger.debug(f"Found multi-step path: {identity} -> {target} ({escalation_count} steps)")
+                        
+                        elif escalation_count == 1:
+                            # Single-step escalation
                             attack_path = self._build_attack_path(path)
                             if attack_path:
                                 self._attack_paths['privilege_escalation'].append(attack_path)
                             
                 except nx.NetworkXNoPath:
                     continue
+                except nx.NetworkXError:
+                    # Handle other graph errors
+                    continue
+        
+        logger.info(f"Found {multi_step_count} multi-step attack paths")
     
     def _find_lateral_movement_paths(self):
         """Find paths for lateral movement between projects"""
@@ -374,8 +433,27 @@ class PathAnalyzer:
                 else:
                     permissions_used.append(self._infer_permission_from_edge_type(edge_type))
         
-        # Calculate risk
-        risk_score = sum(e.get_risk_score() for e in path_edges) / len(path_edges) if path_edges else 0
+        # Calculate risk based on edge types
+        if path_edges:
+            # Check for critical edge types
+            critical_edges = [EdgeType.CAN_IMPERSONATE_SA, EdgeType.CAN_CREATE_SERVICE_ACCOUNT_KEY]
+            high_edges = [EdgeType.CAN_DEPLOY_FUNCTION_AS, EdgeType.CAN_DEPLOY_CLOUD_RUN_AS, EdgeType.CAN_ACT_AS_VIA_VM]
+            
+            has_critical = any(e.type in critical_edges for e in path_edges)
+            has_high = any(e.type in high_edges for e in path_edges)
+            
+            if has_critical:
+                risk_score = 0.9  # Critical risk
+            elif has_high:
+                risk_score = 0.7  # High risk
+            else:
+                # Calculate average risk for other edges
+                risk_score = sum(e.get_risk_score() for e in path_edges) / len(path_edges)
+                # Ensure medium paths don't get too high risk scores
+                if risk_score > 0.6:
+                    risk_score = 0.5
+        else:
+            risk_score = 0
         
         # Build detailed description
         description = self._build_attack_description(path_nodes, path_edges, escalation_techniques)
@@ -460,25 +538,134 @@ class PathAnalyzer:
                 'description': 'SSH into VM and access metadata service',
                 'permission': 'compute.instances.osLogin'
             },
+            EdgeType.CAN_DEPLOY_GKE_POD_AS: {
+                'name': 'GKE Pod Deployment',
+                'icon': '☸️',
+                'description': 'Deploy pod in GKE with service account',
+                'permission': 'container.pods.create + iam.serviceAccounts.actAs'
+            },
+            EdgeType.CAN_SATISFY_IAM_CONDITION: {
+                'name': 'IAM Condition Bypass',
+                'icon': '🔓',
+                'description': 'Satisfy IAM conditions to gain access',
+                'permission': 'Varies by condition'
+            },
+            EdgeType.EXTERNAL_PRINCIPAL_CAN_IMPERSONATE: {
+                'name': 'External Identity Impersonation',
+                'icon': '🌐',
+                'description': 'External identity can impersonate service account',
+                'permission': 'iam.workloadIdentityPools.providers.use'
+            },
+            EdgeType.CAN_HIJACK_WORKLOAD_IDENTITY: {
+                'name': 'Workload Identity Hijacking',
+                'icon': '🎭',
+                'description': 'Hijack GKE workload identity',
+                'permission': 'container.pods.create'
+            },
+            EdgeType.CAN_MODIFY_CUSTOM_ROLE: {
+                'name': 'Custom Role Modification',
+                'icon': '✏️',
+                'description': 'Modify custom role to add permissions',
+                'permission': 'iam.roles.update'
+            },
+            EdgeType.CAN_LAUNCH_AS_DEFAULT_SA: {
+                'name': 'Default Service Account Usage',
+                'icon': '🤖',
+                'description': 'Launch resources using default service account',
+                'permission': 'Varies by service'
+            },
+            EdgeType.CAN_ATTACH_SERVICE_ACCOUNT: {
+                'name': 'Service Account Attachment',
+                'icon': '📎',
+                'description': 'Attach service account to resources',
+                'permission': 'iam.serviceAccounts.actAs'
+            },
+            EdgeType.CAN_UPDATE_METADATA: {
+                'name': 'Metadata Manipulation',
+                'icon': '📝',
+                'description': 'Update instance metadata',
+                'permission': 'compute.instances.setMetadata'
+            },
+            EdgeType.CAN_ASSIGN_CUSTOM_ROLE: {
+                'name': 'Custom Role Assignment',
+                'icon': '🎯',
+                'description': 'Assign custom roles with dangerous permissions',
+                'permission': 'resourcemanager.projects.setIamPolicy'
+            },
+            EdgeType.HAS_TAG_BINDING_ESCALATION: {
+                'name': 'Tag-based Escalation',
+                'icon': '🏷️',
+                'description': 'Use tag bindings for privilege escalation',
+                'permission': 'resourcemanager.tagBindings.create'
+            },
+            EdgeType.CAN_SSH_AND_IMPERSONATE: {
+                'name': 'SSH + Impersonation',
+                'icon': '🔐',
+                'description': 'SSH access combined with impersonation',
+                'permission': 'compute.instances.osLogin + iam.serviceAccounts.getAccessToken'
+            },
+            EdgeType.HAS_ESCALATED_PRIVILEGE: {
+                'name': 'Confirmed Privilege Escalation',
+                'icon': '⚠️',
+                'description': 'Privilege escalation detected in audit logs',
+                'permission': 'N/A - detected from logs'
+            },
             EdgeType.HAS_ROLE: {
                 'name': 'Role Assignment',
                 'icon': '👤',
                 'description': 'Has IAM role granting permissions',
-                'permission': edge_data.get('via_role', 'Unknown role')
+                'permission': edge_data.get('via_role', edge_data.get('role', 'IAM role'))
+            },
+            EdgeType.MEMBER_OF: {
+                'name': 'Group Membership',
+                'icon': '👥',
+                'description': 'Member of group',
+                'permission': 'N/A'
+            },
+            EdgeType.CAN_ADMIN: {
+                'name': 'Administrative Access',
+                'icon': '👑',
+                'description': 'Full administrative control',
+                'permission': 'resourcemanager.projects.setIamPolicy'
+            },
+            EdgeType.CAN_WRITE: {
+                'name': 'Write Access',
+                'icon': '✍️',
+                'description': 'Can modify resources',
+                'permission': 'Varies by resource'
+            },
+            EdgeType.CAN_READ: {
+                'name': 'Read Access',
+                'icon': '👁️',
+                'description': 'Can view resources',
+                'permission': 'Varies by resource'
+            },
+            EdgeType.CAN_IMPERSONATE: {
+                'name': 'General Impersonation',
+                'icon': '🔑',
+                'description': 'Can impersonate identity',
+                'permission': 'iam.serviceAccounts.getAccessToken'
             }
         }
         
+        # Get the technique from the map, or create a sensible default
         technique = technique_map.get(edge_type, {
-            'name': edge_type.value.replace('_', ' ').title(),
+            'name': edge_type.value.replace('_', ' ').replace('can ', 'Can ').replace('has ', 'Has ').title(),
             'icon': '🔐',
-            'description': 'Permission grants access',
-            'permission': 'Unknown'
+            'description': f'{edge_type.value.replace("_", " ").title()} capability',
+            'permission': edge_data.get('permission', edge_data.get('via_role', self._infer_permission_from_edge_type(edge_type)))
         })
+        
+        # Make a copy to avoid modifying the original
+        technique = technique.copy()
         
         # Add edge-specific data
         technique['edge_type'] = edge_type.value
         if 'via_role' in edge_data:
             technique['via_role'] = edge_data['via_role']
+            # Update permission if it's a role-based edge
+            if technique['permission'] in ['IAM role', 'Unknown role']:
+                technique['permission'] = edge_data['via_role']
         
         return technique
     
@@ -494,9 +681,24 @@ class PathAnalyzer:
             EdgeType.CAN_LOGIN_TO_VM: 'compute.instances.osLogin',
             EdgeType.CAN_ADMIN: 'resourcemanager.projects.setIamPolicy',
             EdgeType.CAN_WRITE: 'storage.objects.create',
-            EdgeType.CAN_READ: 'storage.objects.get'
+            EdgeType.CAN_READ: 'storage.objects.get',
+            EdgeType.CAN_DEPLOY_GKE_POD_AS: 'container.pods.create',
+            EdgeType.CAN_SATISFY_IAM_CONDITION: 'iam.conditions.check',
+            EdgeType.EXTERNAL_PRINCIPAL_CAN_IMPERSONATE: 'iam.workloadIdentityPools.providers.use',
+            EdgeType.CAN_HIJACK_WORKLOAD_IDENTITY: 'container.pods.create',
+            EdgeType.CAN_MODIFY_CUSTOM_ROLE: 'iam.roles.update',
+            EdgeType.CAN_LAUNCH_AS_DEFAULT_SA: 'compute.instances.create',
+            EdgeType.CAN_ATTACH_SERVICE_ACCOUNT: 'iam.serviceAccounts.actAs',
+            EdgeType.CAN_UPDATE_METADATA: 'compute.instances.setMetadata',
+            EdgeType.CAN_ASSIGN_CUSTOM_ROLE: 'resourcemanager.projects.setIamPolicy',
+            EdgeType.HAS_TAG_BINDING_ESCALATION: 'resourcemanager.tagBindings.create',
+            EdgeType.CAN_SSH_AND_IMPERSONATE: 'compute.instances.osLogin',
+            EdgeType.HAS_ESCALATED_PRIVILEGE: 'N/A - detected from logs',
+            EdgeType.HAS_ROLE: 'iam.roles.get',
+            EdgeType.MEMBER_OF: 'N/A - group membership',
+            EdgeType.CAN_IMPERSONATE: 'iam.serviceAccounts.getAccessToken'
         }
-        return permission_map.get(edge_type, 'unknown')
+        return permission_map.get(edge_type, f'{edge_type.value.lower().replace("_", ".")}')
     
     def _extract_node_metadata(self, nodes: List[Node]) -> List[Dict[str, Any]]:
         """Extract visualization metadata for nodes"""
@@ -590,12 +792,36 @@ class PathAnalyzer:
             EdgeType.CAN_DEPLOY_CLOUD_RUN_AS: 'deploy run',
             EdgeType.CAN_TRIGGER_BUILD_AS: 'trigger build',
             EdgeType.CAN_LOGIN_TO_VM: 'SSH access',
-            EdgeType.HAS_ROLE: edge.properties.get('via_role', 'has role'),
+            EdgeType.HAS_ROLE: edge.properties.get('via_role', edge.properties.get('role', 'has role')),
             EdgeType.CAN_ADMIN: 'admin',
             EdgeType.CAN_WRITE: 'write',
-            EdgeType.CAN_READ: 'read'
+            EdgeType.CAN_READ: 'read',
+            EdgeType.CAN_DEPLOY_GKE_POD_AS: 'deploy pod',
+            EdgeType.CAN_SATISFY_IAM_CONDITION: 'satisfy condition',
+            EdgeType.EXTERNAL_PRINCIPAL_CAN_IMPERSONATE: 'external impersonate',
+            EdgeType.CAN_HIJACK_WORKLOAD_IDENTITY: 'hijack workload',
+            EdgeType.CAN_MODIFY_CUSTOM_ROLE: 'modify role',
+            EdgeType.CAN_LAUNCH_AS_DEFAULT_SA: 'use default SA',
+            EdgeType.CAN_ATTACH_SERVICE_ACCOUNT: 'attach SA',
+            EdgeType.CAN_UPDATE_METADATA: 'update metadata',
+            EdgeType.CAN_ASSIGN_CUSTOM_ROLE: 'assign role',
+            EdgeType.HAS_TAG_BINDING_ESCALATION: 'tag escalation',
+            EdgeType.CAN_SSH_AND_IMPERSONATE: 'SSH + impersonate',
+            EdgeType.HAS_ESCALATED_PRIVILEGE: 'escalated',
+            EdgeType.MEMBER_OF: 'member of',
+            EdgeType.CAN_IMPERSONATE: 'impersonate'
         }
-        return label_map.get(edge.type, edge.type.value)
+        
+        # For HAS_ROLE edges, try to extract the actual role name
+        if edge.type == EdgeType.HAS_ROLE:
+            role = edge.properties.get('via_role', edge.properties.get('role'))
+            if role:
+                # Clean up role name for display
+                if role.startswith('roles/'):
+                    return role[6:]  # Remove 'roles/' prefix
+                return role
+        
+        return label_map.get(edge.type, edge.type.value.replace('_', ' ').lower())
     
     def _get_edge_color(self, edge_type: EdgeType) -> str:
         """Get color for edge type"""

@@ -149,6 +149,9 @@ class HTMLVisualizer:
         nodes_by_type = self._get_nodes_by_type()
         edges_by_type = self._get_edges_by_type()
         
+        # Get logo base64
+        logo_base64 = self._get_logo_base64()
+        
         # Create the complete HTML
         html = f"""
 <!DOCTYPE html>
@@ -156,11 +159,9 @@ class HTMLVisualizer:
 <head>
     <title>EscaGCP Security Dashboard</title>
     <meta charset="utf-8">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
     <style>
+        {self._get_inter_font_css()}
         body {{
             margin: 0;
             padding: 0;
@@ -185,12 +186,14 @@ class HTMLVisualizer:
         
         .header {{
             background-color: #ffffff;
-            padding: 15px 20px;
+            padding: 12px 20px;
             border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            height: 61px;
+            box-sizing: border-box;
         }}
         
         .header h1 {{
@@ -199,6 +202,14 @@ class HTMLVisualizer:
             font-size: 24px;
             font-weight: 600;
             font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }}
+        
+        .header-logo {{
+            height: 40px;
+            width: auto;
         }}
         
         .stats-bar {{
@@ -208,7 +219,7 @@ class HTMLVisualizer:
         
         .stat-item {{
             background-color: #ffffff;
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
@@ -218,6 +229,7 @@ class HTMLVisualizer:
             font-family: 'Inter', sans-serif;
             border: 1px solid #e5e7eb;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
         }}
         
         .stat-item:hover {{
@@ -227,35 +239,38 @@ class HTMLVisualizer:
         }}
         
         .stat-value {{
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
             color: #6b46c1;
             font-family: 'Inter', sans-serif;
+            line-height: 1;
         }}
         
         .stat-label {{
-            font-size: 12px;
+            font-size: 11px;
             color: #6b7280;
             margin-top: 2px;
             font-weight: 400;
             font-family: 'Inter', sans-serif;
+            line-height: 1;
         }}
         
         .share-button {{
             background-color: #6b46c1;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             font-family: 'Inter', sans-serif;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-left: 20px;
+            gap: 6px;
+            margin-left: 16px;
+            box-sizing: border-box;
         }}
         
         .share-button:hover {{
@@ -352,6 +367,7 @@ class HTMLVisualizer:
             position: relative;
             background-color: #f3f4f6;
             overflow: hidden;
+            min-height: 0;
         }}
         
         #mynetwork {{
@@ -367,12 +383,39 @@ class HTMLVisualizer:
             flex-direction: column;
             overflow: hidden;
             box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+            height: 100vh;
+            position: relative;
+            min-width: 300px;
+            max-width: 800px;
+        }}
+        
+        .sidebar-resizer {{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            cursor: col-resize;
+            background-color: transparent;
+            transition: background-color 0.3s;
+            z-index: 100;
+        }}
+        
+        .sidebar-resizer:hover {{
+            background-color: #6b46c1;
+        }}
+        
+        .sidebar-resizer.resizing {{
+            background-color: #6b46c1;
         }}
         
         .sidebar-tabs {{
             display: flex;
             background-color: #f9fafb;
             border-bottom: 1px solid #e5e7eb;
+            height: 61px;
+            align-items: center;
+            box-sizing: border-box;
         }}
         
         .tab {{
@@ -490,6 +533,149 @@ class HTMLVisualizer:
             font-family: 'Inter', sans-serif;
         }}
         
+        .attack-category-section {{
+            margin-bottom: 25px;
+        }}
+        
+        .category-header {{
+            font-size: 16px;
+            font-weight: 600;
+            color: #6b46c1;
+            margin-bottom: 15px;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        
+        .attack-path-card {{
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }}
+        
+        .attack-path-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(107, 70, 193, 0.15);
+            border-color: #6b46c1;
+        }}
+        
+        .path-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }}
+        
+        .path-title {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            flex: 1;
+            min-width: 0;
+        }}
+        
+        .path-source {{
+            color: #6b46c1;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }}
+        
+        .path-arrow {{
+            color: #9ca3af;
+            font-size: 16px;
+            flex-shrink: 0;
+        }}
+        
+        .path-target {{
+            color: #dc2626;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }}
+        
+        .path-risk-badge {{
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }}
+        
+        .path-risk-badge.risk-critical {{
+            background-color: #dc2626;
+        }}
+        
+        .path-risk-badge.risk-high {{
+            background-color: #f59e0b;
+        }}
+        
+        .path-risk-badge.risk-medium {{
+            background-color: #3b82f6;
+        }}
+        
+        .path-risk-badge.risk-low {{
+            background-color: #10b981;
+        }}
+        
+        .path-details {{
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #6b7280;
+            align-items: center;
+        }}
+        
+        .path-steps {{
+            font-weight: 500;
+            flex-shrink: 0;
+        }}
+        
+        .path-description {{
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }}
+        
+        .show-more-link {{
+            text-align: center;
+            color: #6b46c1;
+            font-size: 13px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }}
+        
+        .show-more-link:hover {{
+            text-decoration: underline;
+        }}
+        
+        .empty-state {{
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }}
+        
+        .empty-icon {{
+            font-size: 48px;
+            margin-bottom: 10px;
+        }}
+        
         .dangerous-role-item {{
             background-color: #fef2f2;
             border-radius: 8px;
@@ -518,6 +704,32 @@ class HTMLVisualizer:
             font-size: 12px;
             color: #9ca3af;
             font-family: 'Inter', sans-serif;
+        }}
+        
+        .role-holders-label {{
+            font-weight: 600;
+            margin-bottom: 4px;
+        }}
+        
+        .role-holders-list {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }}
+        
+        .role-holder-item {{
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }}
+        
+        .role-holder-item.more {{
+            background: #e5e7eb;
+            color: #6b7280;
         }}
         
         .path-list-item {{
@@ -723,7 +935,10 @@ class HTMLVisualizer:
     <div class="dashboard">
         <div class="main-content">
             <div class="header">
-                <h1>EscaGCP Security Dashboard</h1>
+                <h1>
+                    <img src="data:image/png;base64,{logo_base64}" alt="EscaGCP Logo" class="header-logo">
+                    EscaGCP Security Dashboard
+                </h1>
                 <div class="stats-bar">
                     <div class="stat-item" onclick="showModal('nodes')">
                         <div class="stat-value">{stats['total_nodes']}</div>
@@ -759,15 +974,15 @@ class HTMLVisualizer:
         </div>
         
         <div class="sidebar">
+            <div class="sidebar-resizer"></div>
             <div class="sidebar-tabs">
-                <button class="tab active" onclick="showTab('legend', event)">Legend</button>
+                <button class="tab active" onclick="showTab('legend', event)">Dictionary</button>
                 <button class="tab" onclick="showTab('attacks', event)">Attack Paths</button>
-                <button class="tab" onclick="showTab('roles', event)">Dangerous Roles</button>
                 <button class="tab" onclick="showTab('paths', event)">Found Paths</button>
             </div>
             
             <div class="sidebar-content">
-                <!-- Legend Tab -->
+                <!-- Dictionary Tab (formerly Legend) -->
                 <div id="legend-tab" class="tab-content">
                     <button class="collapsible active" onclick="toggleCollapsible(this)">Node Types</button>
                     <div class="collapsible-content show">
@@ -798,6 +1013,34 @@ class HTMLVisualizer:
                         <div class="legend-item">
                             <div class="legend-color" style="background-color: #757575;"></div>
                             <span>Role</span>
+                        </div>
+                    </div>
+                    
+                    <button class="collapsible" onclick="toggleCollapsible(this)">Node Shapes</button>
+                    <div class="collapsible-content">
+                        <div class="legend-item">
+                            <div class="legend-shape">●</div>
+                            <span>User (Circle)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">■</div>
+                            <span>Service Account (Square)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">▲</div>
+                            <span>Group (Triangle)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">▬</div>
+                            <span>Project/Folder (Box)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">★</div>
+                            <span>Organization (Star)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">◆</div>
+                            <span>Role (Diamond)</span>
                         </div>
                     </div>
                     
@@ -840,16 +1083,27 @@ class HTMLVisualizer:
                             <span>Low Risk (>0.2)</span>
                         </div>
                     </div>
+                    
+                    <button class="collapsible" onclick="toggleCollapsible(this)">Risk Calculation</button>
+                    <div class="collapsible-content">
+                        <div style="font-size: 13px; color: #6b7280; line-height: 1.6;">
+                            <p style="margin-bottom: 10px;"><strong>How Risk Scores are Calculated:</strong></p>
+                            <p style="margin-bottom: 8px;">• <strong>Critical (>80%):</strong> Direct privilege escalation paths like service account impersonation or key creation</p>
+                            <p style="margin-bottom: 8px;">• <strong>High (>60%):</strong> Indirect escalation via resource deployment (Cloud Functions, VMs, Cloud Run)</p>
+                            <p style="margin-bottom: 8px;">• <strong>Medium (>40%):</strong> Lateral movement or limited privilege paths</p>
+                            <p style="margin-bottom: 8px;">• <strong>Low (>20%):</strong> Read-only access or minimal impact paths</p>
+                            <p style="margin-top: 10px;"><strong>Factors:</strong></p>
+                            <p style="margin-bottom: 8px;">• Attack technique severity</p>
+                            <p style="margin-bottom: 8px;">• Number of steps (multi-step = higher risk)</p>
+                            <p style="margin-bottom: 8px;">• Target sensitivity (Org > Folder > Project)</p>
+                            <p style="margin-bottom: 8px;">• Node centrality in the graph</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Attack Paths Tab -->
                 <div id="attacks-tab" class="tab-content hidden">
                     {self._create_attack_explanations_html()}
-                </div>
-                
-                <!-- Dangerous Roles Tab -->
-                <div id="roles-tab" class="tab-content hidden">
-                    {self._create_dangerous_roles_html(dangerous_roles_info)}
                 </div>
                 
                 <!-- Found Paths Tab -->
@@ -921,6 +1175,8 @@ class HTMLVisualizer:
         </div>
     </div>
     
+    {self._create_react_modal_integration()}
+    
     <!-- Share Modal -->
     <div id="shareModal" class="share-modal">
         <div class="share-modal-content">
@@ -954,6 +1210,16 @@ class HTMLVisualizer:
         
         {self._get_dashboard_javascript()}
         
+        // Initialize sidebar resizer when page loads
+        document.addEventListener('DOMContentLoaded', function() {{
+            initSidebarResizer();
+        }});
+        
+        // Also try to initialize immediately in case DOM is already loaded
+        if (document.readyState !== 'loading') {{
+            initSidebarResizer();
+        }}
+        
         // Window click handler to close modals
         window.onclick = function(event) {{
             if (event.target.classList.contains('modal')) {{
@@ -967,102 +1233,34 @@ class HTMLVisualizer:
         return html
     
     def _create_graph_html(self, risk_scores: Dict[str, Any], highlight_nodes: Optional[Set[str]]) -> str:
-        """Create the graph visualization HTML using pyvis"""
-        # Create pyvis network
-        net = Network(
-            height="100%",
-            width="100%",
-            directed=True,
-            notebook=False,
-            bgcolor="#222222",
-            font_color="white"
-        )
+        """Create the graph visualization HTML using vis.js directly"""
         
-        # Configure physics for better visualization
-        net.set_options("""
-        {
-            "physics": {
-                "enabled": true,
-                "solver": "forceAtlas2Based",
-                "forceAtlas2Based": {
-                    "gravitationalConstant": -50,
-                    "centralGravity": 0.01,
-                    "springLength": 100,
-                    "springConstant": 0.08,
-                    "damping": 0.09,
-                    "avoidOverlap": 0.5
-                },
-                "stabilization": {
-                    "enabled": true,
-                    "iterations": 1000,
-                    "updateInterval": 25
-                }
-            },
-            "interaction": {
-                "hover": true,
-                "tooltipDelay": 200,
-                "hideEdgesOnDrag": true,
-                "navigationButtons": true,
-                "keyboard": true,
-                "navigationButtons": true,
-                "keyboard": true
-            },
-            "configure": {
-                "enabled": false
-            },
-            "manipulation": {
-                "enabled": false
-            },
-            "nodes": {
-                "borderWidth": 2,
-                "borderWidthSelected": 4,
-                "font": {
-                    "face": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
-                    "size": 14,
-                    "strokeWidth": 0,
-                    "color": "#ffffff"
-                }
-            },
-            "edges": {
-                "smooth": {
-                    "type": "continuous",
-                    "forceDirection": "none"
-                },
-                "arrows": {
-                    "to": {
-                        "enabled": true,
-                        "scaleFactor": 0.5
-                    }
-                },
-                "font": {
-                    "face": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
-                    "size": 10,
-                    "strokeWidth": 0,
-                    "color": "#cccccc"
-                }
-            }
-        }
-        """)
-        
-        # Add nodes
+        # Prepare nodes for vis.js
+        vis_nodes = []
         for node_id, node_data in self.graph.nodes(data=True):
             node_type = node_data.get('type', 'unknown')
             
             # Determine color based on risk
             if highlight_nodes and node_id in highlight_nodes:
                 color = "#FFD700"  # Gold for highlighted nodes
+                border_color = "#FFA500"
             elif risk_scores and node_id in risk_scores:
                 risk = risk_scores[node_id].get('total', 0) if isinstance(risk_scores[node_id], dict) else risk_scores[node_id]
                 if risk > 0.8:
                     color = "#d32f2f"  # Critical
+                    border_color = "#b71c1c"
                 elif risk > 0.6:
                     color = "#f44336"  # High
+                    border_color = "#d32f2f"
                 elif risk > 0.4:
                     color = "#ff9800"  # Medium
+                    border_color = "#f57c00"
                 else:
                     color = self.config.visualization_html_node_colors.get(node_type, '#999999')
+                    border_color = "#666666"
             else:
                 color = self.config.visualization_html_node_colors.get(node_type, '#999999')
+                border_color = "#666666"
             
             # Create label
             label = node_data.get('name', node_id)
@@ -1086,78 +1284,268 @@ class HTMLVisualizer:
             }
             shape = shape_map.get(node_type, 'dot')
             
-            # Add node with explicit font configuration
-            net.add_node(
-                node_id,
-                label=label,
-                title=self._create_node_tooltip(node_id, node_data, risk_scores),
-                color=color,
-                size=25 if (highlight_nodes and node_id in highlight_nodes) else 20,
-                shape=shape,
-                font={'face': 'Inter, sans-serif', 'size': 14, 'color': '#ffffff', 'strokeWidth': 0}
-            )
+            # Add node
+            vis_nodes.append({
+                'id': node_id,
+                'label': label,
+                'title': self._create_node_tooltip(node_id, node_data, risk_scores),
+                'color': {
+                    'background': color,
+                    'border': border_color,
+                    'highlight': {
+                        'background': color,
+                        'border': '#ffffff'
+                    }
+                },
+                'size': 25 if (highlight_nodes and node_id in highlight_nodes) else 20,
+                'shape': shape,
+                'font': {
+                    'color': '#ffffff',
+                    'size': 14,
+                    'face': 'Inter, sans-serif',
+                    'strokeWidth': 3,
+                    'strokeColor': '#000000'
+                }
+            })
         
-        # Add edges
+        # Prepare edges for vis.js
+        vis_edges = []
         for u, v, edge_data in self.graph.edges(data=True):
             edge_type = edge_data.get('type', 'unknown')
-            color = self.config.visualization_html_edge_colors.get(edge_type, '#999999')
             
-            # Make dangerous edges more visible
-            width = 2 if edge_type in ['can_impersonate', 'can_impersonate_sa', 'can_create_service_account_key'] else 1
+            # Determine edge color and width based on type
+            if edge_type in ['can_impersonate', 'can_impersonate_sa', 'can_create_service_account_key']:
+                color = '#ff4444'
+                width = 3
+            elif edge_type in ['can_deploy_function_as', 'can_deploy_cloud_run_as', 'can_act_as_via_vm']:
+                color = '#ff8800'
+                width = 2
+            else:
+                color = self.config.visualization_html_edge_colors.get(edge_type, '#666666')
+                width = 1
             
-            net.add_edge(
-                u,
-                v,
-                title=self._create_edge_tooltip(edge_data),
-                color=color,
-                width=width,
-                arrows='to'
-            )
+            vis_edges.append({
+                'from': u,
+                'to': v,
+                'title': self._create_edge_tooltip(edge_data),
+                'color': {
+                    'color': color,
+                    'highlight': '#ffffff'
+                },
+                'width': width,
+                'arrows': {
+                    'to': {
+                        'enabled': True,
+                        'scaleFactor': 0.5
+                    }
+                }
+            })
         
-        # Generate HTML and save to temporary file
-        import tempfile
-        import os
+        # Create the embedded HTML with vis.js
+        embedded_html = f"""
+        <div id="mynetwork" style="width: 100%; height: 100%; background-color: #1a1a1a; position: relative;">
+            <div class="graph-controls" style="position: absolute; top: 10px; right: 10px; z-index: 1000; display: flex; gap: 8px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <button onclick="fitNetwork()" style="background: #6b46c1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.background='#553c9a'" onmouseout="this.style.background='#6b46c1'">Fit</button>
+                <button onclick="centerNetwork()" style="background: #6b46c1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.background='#553c9a'" onmouseout="this.style.background='#6b46c1'">Center</button>
+                <button onclick="spreadNetwork()" style="background: #6b46c1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.background='#553c9a'" onmouseout="this.style.background='#6b46c1'">Spread</button>
+                <button onclick="toggleLabels()" style="background: #6b46c1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.background='#553c9a'" onmouseout="this.style.background='#6b46c1'">Toggle Labels</button>
+            </div>
+        </div>
+        <script type="text/javascript">
+            // Create the network
+            var container = document.getElementById('mynetwork');
+            var originalNodes = {json.dumps(vis_nodes)};
+            var labelsVisible = true;
+            var selectedNodeId = null;
+            
+            // Initially hide labels for cleaner view
+            var nodesWithHiddenLabels = originalNodes.map(function(node) {{
+                return {{
+                    ...node,
+                    label: '',
+                    originalLabel: node.label
+                }};
+            }});
+            
+            var data = {{
+                nodes: new vis.DataSet(nodesWithHiddenLabels),
+                edges: new vis.DataSet({json.dumps(vis_edges)})
+            }};
+            
+            var options = {{
+                physics: {{
+                    enabled: true,
+                    solver: "barnesHut",
+                    barnesHut: {{
+                        gravitationalConstant: -2000,
+                        centralGravity: 0.3,
+                        springLength: 95,
+                        springConstant: 0.04,
+                        damping: 0.09,
+                        avoidOverlap: 0.1
+                    }},
+                    stabilization: {{
+                        enabled: true,
+                        iterations: 1000,
+                        updateInterval: 100,
+                        onlyDynamicEdges: false,
+                        fit: true
+                    }},
+                    timestep: 0.5,
+                    adaptiveTimestep: true
+                }},
+                interaction: {{
+                    hover: true,
+                    tooltipDelay: 200,
+                    hideEdgesOnDrag: true,
+                    navigationButtons: true,
+                    keyboard: true,
+                    zoomView: true,
+                    dragView: true
+                }},
+                nodes: {{
+                    borderWidth: 2,
+                    borderWidthSelected: 4,
+                    font: {{
+                        color: '#ffffff',
+                        size: 14,
+                        face: 'Inter, sans-serif',
+                        strokeWidth: 3,
+                        strokeColor: '#000000'
+                    }}
+                }},
+                edges: {{
+                    smooth: {{
+                        type: "continuous",
+                        forceDirection: "none",
+                        roundness: 0.5
+                    }},
+                    arrows: {{
+                        to: {{
+                            enabled: true,
+                            scaleFactor: 0.5
+                        }}
+                    }},
+                    font: {{
+                        color: '#ffffff',
+                        size: 10,
+                        face: 'Inter, sans-serif',
+                        strokeWidth: 3,
+                        strokeColor: '#000000',
+                        align: 'middle'
+                    }},
+                    labelHighlightBold: true
+                }},
+                layout: {{
+                    improvedLayout: true,
+                    hierarchical: false
+                }}
+            }};
+            
+            var network = new vis.Network(container, data, options);
+            
+            // Stop physics after stabilization to prevent dancing
+            network.on("stabilizationIterationsDone", function () {{
+                network.setOptions({{ physics: false }});
+            }});
+            
+            // Click handler to show/hide labels
+            network.on("click", function(params) {{
+                if (params.nodes.length > 0) {{
+                    var nodeId = params.nodes[0];
+                    var node = data.nodes.get(nodeId);
+                    
+                    if (selectedNodeId && selectedNodeId !== nodeId) {{
+                        // Hide the previously selected node's label
+                        var prevNode = data.nodes.get(selectedNodeId);
+                        if (prevNode) {{
+                            data.nodes.update({{
+                                id: selectedNodeId,
+                                label: ''
+                            }});
+                        }}
+                    }}
+                    
+                    if (selectedNodeId === nodeId) {{
+                        // Toggle off if clicking the same node
+                        data.nodes.update({{
+                            id: nodeId,
+                            label: ''
+                        }});
+                        selectedNodeId = null;
+                    }} else {{
+                        // Show this node's label
+                        data.nodes.update({{
+                            id: nodeId,
+                            label: node.originalLabel || node.id
+                        }});
+                        selectedNodeId = nodeId;
+                    }}
+                }}
+            }});
+            
+            // Control functions
+            window.fitNetwork = function() {{
+                network.fit({{
+                    animation: {{
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }}
+                }});
+            }};
+            
+            window.centerNetwork = function() {{
+                network.moveTo({{
+                    position: {{x: 0, y: 0}},
+                    scale: 1,
+                    animation: {{
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }}
+                }});
+            }};
+            
+            window.spreadNetwork = function() {{
+                // Temporarily increase physics to spread nodes
+                network.setOptions({{
+                    physics: {{
+                        enabled: true,
+                        solver: "barnesHut",
+                        barnesHut: {{
+                            gravitationalConstant: -5000,
+                            centralGravity: 0.01,
+                            springLength: 200,
+                            springConstant: 0.02,
+                            damping: 0.09,
+                            avoidOverlap: 1
+                        }}
+                    }}
+                }});
+                
+                // Stop physics after a short time
+                setTimeout(function() {{
+                    network.setOptions({{ physics: false }});
+                }}, 3000);
+            }};
+            
+            window.toggleLabels = function() {{
+                labelsVisible = !labelsVisible;
+                var nodes = data.nodes.get();
+                nodes.forEach(function(node) {{
+                    data.nodes.update({{
+                        id: node.id,
+                        label: labelsVisible ? (node.originalLabel || node.id) : ''
+                    }});
+                }});
+                selectedNodeId = null;
+            }};
+            
+            // Store network globally for other functions to access
+            window.graphNetwork = network;
+        </script>
+        """
         
-        # Create a temporary file
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.html')
-        try:
-            # Generate the HTML
-            net.save_graph(temp_path)
-            
-            # Read the generated HTML
-            with open(temp_path, 'r') as f:
-                full_html = f.read()
-            
-            # Extract the necessary parts
-            # Find the vis.js library includes
-            lib_start = full_html.find('<script')
-            lib_end = full_html.find('</script>')
-            while lib_end != -1 and 'vis-network.min.js' not in full_html[lib_start:lib_end]:
-                lib_start = full_html.find('<script', lib_end)
-                lib_end = full_html.find('</script>', lib_start)
-            
-            # Get all script tags for vis.js
-            scripts = []
-            script_start = full_html.find('<script')
-            while script_start != -1:
-                script_end = full_html.find('</script>', script_start) + 9
-                script_content = full_html[script_start:script_end]
-                if 'vis-network.min' in script_content or 'nodes = new vis.DataSet' in script_content:
-                    scripts.append(script_content)
-                script_start = full_html.find('<script', script_end)
-            
-            # Create the embedded HTML
-            embedded_html = f"""
-            <div id="mynetwork" style="width: 100%; height: 100%; background-color: #222222;"></div>
-            {' '.join(scripts)}
-            """
-            
-            return embedded_html
-            
-        finally:
-            # Clean up the temporary file
-            os.close(temp_fd)
-            os.unlink(temp_path)
+        return embedded_html
     
     def _create_node_tooltip(self, node_id: str, node_data: Dict[str, Any], risk_scores: Dict[str, Any]) -> str:
         """Create tooltip text for a node"""
@@ -1241,6 +1629,19 @@ class HTMLVisualizer:
                 if risk > 0.6:
                     high_risk_count += 1
         
+        # Also count nodes that have dangerous roles as high risk
+        for node_id, node_data in self.graph.nodes(data=True):
+            if node_id.startswith(('user:', 'sa:', 'group:')):
+                # Check if this identity has any dangerous roles
+                for neighbor in self.graph.neighbors(node_id):
+                    if neighbor.startswith('role:'):
+                        role_name = self.graph.nodes[neighbor].get('name', neighbor)
+                        if role_name in self.DANGEROUS_ROLES:
+                            # This is a high risk node
+                            if node_id not in risk_scores or (risk_scores.get(node_id, {}).get('total', 0) if isinstance(risk_scores.get(node_id, {}), dict) else risk_scores.get(node_id, 0)) <= 0.6:
+                                high_risk_count += 1
+                                break
+        
         dangerous_roles_count = 0
         for node_id, node_data in self.graph.nodes(data=True):
             if node_data.get('type') == 'role' and node_data.get('name') in self.DANGEROUS_ROLES:
@@ -1285,36 +1686,133 @@ class HTMLVisualizer:
         return dict(edges_by_type)
     
     def _create_nodes_list_html(self, nodes_by_type: Dict[str, List[Dict[str, Any]]]) -> str:
-        """Create HTML for nodes list in modal"""
-        html = ""
+        """Create HTML for nodes list in modal with enhanced data"""
+        # Prepare enhanced node data
+        enhanced_nodes = {}
+        
         for node_type, nodes in nodes_by_type.items():
+            enhanced_list = []
             for node in nodes[:100]:  # Limit to first 100 per type
-                html += f"""
-                <li class="modal-list-item">
-                    {node['name']}
-                    <span class="node-type-badge">{node_type}</span>
-                </li>
-                """
-        return html
+                node_id = node.get('id', '')
+                node_data = self.graph.nodes.get(node_id, {})
+                
+                # Calculate in/out degrees
+                in_degree = self.graph.in_degree(node_id) if node_id in self.graph else 0
+                out_degree = self.graph.out_degree(node_id) if node_id in self.graph else 0
+                
+                # Extract metadata
+                metadata = {}
+                if 'email' in node_data:
+                    metadata['email'] = node_data['email']
+                if 'project_id' in node_data:
+                    metadata['projectId'] = node_data['project_id']
+                if 'full_name' in node_data:
+                    metadata['fullName'] = node_data['full_name']
+                if 'description' in node_data:
+                    metadata['description'] = node_data['description']
+                
+                enhanced_list.append({
+                    'id': node_id,
+                    'name': node['name'],
+                    'type': node_type,
+                    'metadata': metadata,
+                    'inDegree': in_degree,
+                    'outDegree': out_degree,
+                    'riskScore': node.get('risk_score', 0)
+                })
+            
+            enhanced_nodes[node_type] = enhanced_list
+        
+        # Return JSON data for React component
+        return f"""
+        <div id="nodes-modal-root"></div>
+        <script>
+            window.nodesModalData = {json.dumps(enhanced_nodes)};
+        </script>
+        """
     
     def _create_edges_list_html(self, edges_by_type: Dict[str, List[Dict[str, Any]]]) -> str:
-        """Create HTML for edges list in modal"""
-        html = ""
+        """Create HTML for edges list in modal with enhanced data"""
+        # Prepare enhanced edge data
+        enhanced_edges = {}
+        
         for edge_type, edges in edges_by_type.items():
+            enhanced_list = []
             for edge in edges[:100]:  # Limit to first 100 per type
-                html += f"""
-                <li class="modal-list-item">
-                    {edge['source']} → {edge['target']}
-                    <span class="edge-type-badge">{edge_type}</span>
-                </li>
-                """
-        return html
+                source_id = edge['source']
+                target_id = edge['target']
+                
+                # Get node names
+                source_name = self.graph.nodes.get(source_id, {}).get('name', source_id)
+                target_name = self.graph.nodes.get(target_id, {}).get('name', target_id)
+                
+                # Clean names
+                source_name = self._clean_node_name(source_name)
+                target_name = self._clean_node_name(target_name)
+                
+                # Extract edge metadata
+                edge_data = {}
+                for u, v, data in self.graph.edges(data=True):
+                    if u == source_id and v == target_id and data.get('type') == edge_type:
+                        edge_data = data
+                        break
+                
+                # Build enhanced edge
+                enhanced_edge = {
+                    'id': f"{source_id}-{edge_type}-{target_id}",
+                    'source': source_id,
+                    'target': target_id,
+                    'type': edge_type,
+                    'sourceName': source_name,
+                    'targetName': target_name
+                }
+                
+                # Add permission info if available
+                if 'permission' in edge_data:
+                    enhanced_edge['permission'] = edge_data['permission']
+                elif edge_type == 'CAN_IMPERSONATE_SA':
+                    enhanced_edge['permission'] = 'iam.serviceAccounts.getAccessToken'
+                elif edge_type == 'CAN_CREATE_SERVICE_ACCOUNT_KEY':
+                    enhanced_edge['permission'] = 'iam.serviceAccountKeys.create'
+                elif edge_type == 'CAN_ACT_AS_VIA_VM':
+                    enhanced_edge['permission'] = 'compute.instances.setServiceAccount + iam.serviceAccounts.actAs'
+                elif edge_type == 'CAN_DEPLOY_FUNCTION_AS':
+                    enhanced_edge['permission'] = 'cloudfunctions.functions.create + iam.serviceAccounts.actAs'
+                elif edge_type == 'CAN_DEPLOY_CLOUD_RUN_AS':
+                    enhanced_edge['permission'] = 'run.services.create + iam.serviceAccounts.actAs'
+                
+                # Add resource scope if available
+                if 'resource_scope' in edge_data:
+                    enhanced_edge['resourceScope'] = edge_data['resource_scope']
+                elif 'project' in edge_data:
+                    enhanced_edge['resourceScope'] = f"project/{edge_data['project']}"
+                
+                # Add rationale
+                if edge_type == 'CAN_IMPERSONATE_SA':
+                    enhanced_edge['rationale'] = f"{source_name} has Token Creator role on {target_name}"
+                elif edge_type == 'CAN_CREATE_SERVICE_ACCOUNT_KEY':
+                    enhanced_edge['rationale'] = f"{source_name} can create keys for {target_name}"
+                elif edge_type == 'HAS_ROLE':
+                    enhanced_edge['rationale'] = f"{source_name} has been granted {target_name}"
+                
+                enhanced_list.append(enhanced_edge)
+            
+            enhanced_edges[edge_type] = enhanced_list
+        
+        # Return JSON data for React component
+        return f"""
+        <div id="edges-modal-root"></div>
+        <script>
+            window.edgesModalData = {json.dumps(enhanced_edges)};
+        </script>
+        """
     
     def _create_high_risk_nodes_html(self, risk_scores: Dict[str, Any]) -> str:
         """Create HTML for high risk nodes list"""
         html = ""
         high_risk_nodes = []
         
+        # Collect nodes with high risk scores
         if risk_scores:
             for node_id, score in risk_scores.items():
                 risk = score.get('total', 0) if isinstance(score, dict) else score
@@ -1327,18 +1825,43 @@ class HTMLVisualizer:
                         'risk': risk
                     })
         
+        # Also check for nodes with dangerous roles
+        for node_id, node_data in self.graph.nodes(data=True):
+            if node_id.startswith(('user:', 'sa:', 'group:')):
+                # Check if this identity has any dangerous roles
+                has_dangerous_role = False
+                for neighbor in self.graph.neighbors(node_id):
+                    if neighbor.startswith('role:'):
+                        role_name = self.graph.nodes[neighbor].get('name', neighbor)
+                        if role_name in self.DANGEROUS_ROLES:
+                            has_dangerous_role = True
+                            break
+                
+                if has_dangerous_role:
+                    # Check if not already in high_risk_nodes
+                    if not any(n['id'] == node_id for n in high_risk_nodes):
+                        high_risk_nodes.append({
+                            'id': node_id,
+                            'name': node_data.get('name', node_id),
+                            'type': node_data.get('type', 'unknown'),
+                            'risk': 0.7  # Default risk for dangerous role holders
+                        })
+        
         # Sort by risk score
         high_risk_nodes.sort(key=lambda x: x['risk'], reverse=True)
         
-        for node in high_risk_nodes[:50]:  # Limit to top 50
-            risk_class = 'risk-critical' if node['risk'] > 0.8 else 'risk-high'
-            html += f"""
-            <li class="modal-list-item">
-                {node['name']}
-                <span class="node-type-badge">{node['type']}</span>
-                <span class="path-risk {risk_class}">Risk: {node['risk']:.2f}</span>
-            </li>
-            """
+        if not high_risk_nodes:
+            html = '<li class="modal-list-item">No high risk nodes found</li>'
+        else:
+            for node in high_risk_nodes[:50]:  # Limit to top 50
+                risk_class = 'risk-critical' if node['risk'] > 0.8 else 'risk-high'
+                html += f"""
+                <li class="modal-list-item">
+                    {self._clean_node_name(node['name'])}
+                    <span class="node-type-badge">{node['type']}</span>
+                    <span class="path-risk {risk_class}">Risk: {node['risk']:.2f}</span>
+                </li>
+                """
         
         return html
     
@@ -1369,15 +1892,41 @@ class HTMLVisualizer:
         for role, holders in list(dangerous_roles_info.items())[:limit]:
             if holders:  # Only show roles that are actually assigned
                 description = self.DANGEROUS_ROLES.get(role, "Privileged role")
-                holders_str = ", ".join(holders[:5])  # Show first 5
-                if len(holders) > 5:
-                    holders_str += f" and {len(holders) - 5} more"
+                
+                # Clean up holder names
+                cleaned_holders = []
+                for holder in holders[:5]:  # Show first 5
+                    cleaned_name = self._clean_node_name(holder)
+                    cleaned_holders.append(cleaned_name)
                 
                 html += f"""
                 <div class="dangerous-role-item">
                     <div class="role-name">{role}</div>
                     <div class="role-description">{description}</div>
-                    <div class="role-holders">Assigned to: {holders_str}</div>
+                    <div class="role-holders">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Assigned to {len(holders)} identit{'ies' if len(holders) != 1 else 'y'}:</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+                """
+                
+                for holder in cleaned_holders:
+                    html += f'<span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">{holder}</span>'
+                
+                if len(holders) > 5:
+                    # Create a unique ID for this role's additional holders
+                    role_id = role.replace('/', '_').replace('.', '_')
+                    html += f'''<span id="more-btn-{role_id}" style="background: #e5e7eb; color: #6b7280; padding: 2px 8px; border-radius: 4px; font-size: 12px; cursor: pointer;" onclick="showMoreHolders('{role_id}')">+{len(holders) - 5} more</span>
+                    <div id="more-holders-{role_id}" style="display: none; margin-top: 6px;">'''
+                    
+                    # Add the remaining holders
+                    for holder in holders[5:]:
+                        cleaned_holder = self._clean_node_name(holder)
+                        html += f'<span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace; margin: 2px;">{cleaned_holder}</span>'
+                    
+                    html += '</div>'
+                
+                html += """
+                        </div>
+                    </div>
                 </div>
                 """
         
@@ -1389,36 +1938,298 @@ class HTMLVisualizer:
     def _create_found_paths_html(self, attack_paths: List[Dict[str, Any]], show_all: bool = False) -> str:
         """Create HTML for found attack paths"""
         if not attack_paths:
-            return "<p>No attack paths found. Run analysis to detect paths.</p>"
+            return """
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <p>No attack paths found. Run analysis to detect paths.</p>
+            </div>
+            """
         
         html = ""
         # Group by category
         by_category = defaultdict(list)
         for i, path in enumerate(attack_paths):
-            category = path.get('category', 'other') if isinstance(path, dict) else 'other'
+            # Ensure each path has an index for JavaScript reference
+            if isinstance(path, dict):
+                path['_index'] = i
+                category = path.get('category', 'other')
+            else:
+                # Handle AttackPath objects
+                path_dict = path.to_dict() if hasattr(path, 'to_dict') else {
+                    'risk_score': path.risk_score if hasattr(path, 'risk_score') else 0,
+                    'description': path.description if hasattr(path, 'description') else '',
+                    'length': len(path) if hasattr(path, '__len__') else 1,
+                    'path': path.get_path_string() if hasattr(path, 'get_path_string') else str(path),
+                    'visualization_metadata': path.visualization_metadata if hasattr(path, 'visualization_metadata') else None
+                }
+                path_dict['_index'] = i
+                # Determine category based on path attributes
+                if hasattr(path, 'risk_score') and path.risk_score > 0.9:
+                    category = 'critical_multi_step'
+                elif hasattr(path, 'description') and 'multi-step' in str(path.description).lower():
+                    category = 'critical_multi_step'
+                else:
+                    category = 'privilege_escalation'
             by_category[category].append((i, path))
         
-        for category, indexed_paths in by_category.items():
-            html += f'<div class="legend-title">{category.replace("_", " ").title()}</div>'
+        # Sort categories by severity
+        category_order = ['critical_multi_step', 'critical', 'high', 'medium', 'privilege_escalation', 'lateral_movement', 'other']
+        sorted_categories = sorted(by_category.items(), key=lambda x: category_order.index(x[0]) if x[0] in category_order else 999)
+        
+        for category, indexed_paths in sorted_categories:
+            # Sort paths within category by risk score (descending) then by length (descending)
+            def sort_key(item):
+                idx, path = item
+                if isinstance(path, dict):
+                    risk = path.get('risk_score', 0)
+                    length = path.get('length', 1)
+                else:
+                    risk = path.risk_score if hasattr(path, 'risk_score') else 0
+                    length = len(path) if hasattr(path, '__len__') else 1
+                # Return negative values to sort descending
+                return (-risk, -length)
+            
+            indexed_paths.sort(key=sort_key)
+            
+            # Format category name
+            category_display = category.replace('_', ' ').title()
+            category_icon = '🚨' if 'critical' in category else '⚠️' if 'high' in category else '📊'
+            
+            html += f'<div class="attack-category-section">'
+            html += f'<div class="category-header">{category_icon} {category_display} ({len(indexed_paths)} paths)</div>'
+            
             limit = len(indexed_paths) if show_all else 10
             for idx, path in indexed_paths[:limit]:
                 if isinstance(path, dict):
                     risk = path.get('risk_score', 0)
                     path_str = path.get('path', 'Unknown path')
+                    description = path.get('description', '')
+                    length = path.get('length', 1)
+                    
+                    # Better extraction of source and target
+                    if 'source' in path and 'target' in path:
+                        # If we have explicit source and target
+                        source_data = path['source']
+                        target_data = path['target']
+                        if isinstance(source_data, dict):
+                            source = source_data.get('name', source_data.get('id', 'Unknown'))
+                        else:
+                            source = str(source_data)
+                        if isinstance(target_data, dict):
+                            target = target_data.get('name', target_data.get('id', 'Unknown'))
+                        else:
+                            target = str(target_data)
+                    elif 'path_nodes' in path and len(path['path_nodes']) >= 2:
+                        # Extract from path nodes
+                        first_node = path['path_nodes'][0]
+                        last_node = path['path_nodes'][-1]
+                        if isinstance(first_node, dict):
+                            source = first_node.get('name', first_node.get('id', 'Unknown'))
+                        else:
+                            source = str(first_node)
+                        if isinstance(last_node, dict):
+                            target = last_node.get('name', last_node.get('id', 'Unknown'))
+                        else:
+                            target = str(last_node)
+                        # Fix: Number of edges is nodes - 1
+                        if len(path['path_nodes']) > 1:
+                            length = len(path['path_nodes']) - 1
+                        else:
+                            length = path.get('length', 1)
+                    elif '--[' in path_str and ']-->' in path_str:
+                        # Parse from path string format: node1 --[edge_type]--> node2 --[edge_type]--> node3
+                        parts = path_str.split(' --[')
+                        if parts:
+                            source = parts[0].strip()
+                            # Find the last node
+                            last_part = parts[-1]
+                            if ']--> ' in last_part:
+                                target = last_part.split(']--> ')[-1].strip()
+                            else:
+                                target = 'Unknown'
+                            length = len(parts) - 1
+                        else:
+                            source = 'Unknown'
+                            target = 'Unknown'
+                    elif ' -> ' in path_str:
+                        # Simple arrow format
+                        parts = path_str.split(' -> ')
+                        source = parts[0].strip()
+                        target = parts[-1].strip()
+                        length = len(parts) - 1
+                    else:
+                        # Fallback
+                        source = 'Unknown'
+                        target = 'Unknown'
+                    
+                    # Clean up source and target names
+                    source = self._clean_node_name(source)
+                    target = self._clean_node_name(target)
+                    
                 else:
+                    # Handle AttackPath objects
                     risk = path.risk_score if hasattr(path, 'risk_score') else 0
                     path_str = path.get_path_string() if hasattr(path, 'get_path_string') else str(path)
+                    description = path.description if hasattr(path, 'description') else ''
+                    # Fix: For AttackPath objects, check if it has path_nodes or path_edges
+                    if hasattr(path, 'path_nodes') and len(path.path_nodes) > 1:
+                        length = len(path.path_nodes) - 1  # Number of edges
+                    elif hasattr(path, 'path_edges') and len(path.path_edges) > 0:
+                        length = len(path.path_edges)  # Direct edge count
+                    elif hasattr(path, '__len__'):
+                        # Fallback: assume len() returns nodes, so subtract 1
+                        length = max(1, len(path) - 1)
+                    else:
+                        length = 1
+                    
+                    if hasattr(path, 'source_node') and hasattr(path, 'target_node'):
+                        source = path.source_node.get_display_name() if hasattr(path.source_node, 'get_display_name') else str(path.source_node)
+                        target = path.target_node.get_display_name() if hasattr(path.target_node, 'get_display_name') else str(path.target_node)
+                    else:
+                        source = 'Unknown'
+                        target = 'Unknown'
+                    
+                    source = self._clean_node_name(source)
+                    target = self._clean_node_name(target)
                 
                 risk_class = 'risk-critical' if risk > 0.8 else 'risk-high' if risk > 0.6 else 'risk-medium' if risk > 0.4 else 'risk-low'
                 
+                # Fix the description for multi-step attacks
+                if 'multi-step' in description.lower() and 'steps)' in description:
+                    # Extract the actual number of steps from the description
+                    import re
+                    match = re.search(r'(\d+) steps?\)', description)
+                    if match:
+                        actual_steps = int(match.group(1))
+                        if actual_steps > 0:
+                            length = actual_steps
+                
                 html += f"""
-                <div class="path-list-item clickable" onclick="showAttackPath({idx}, event)" style="cursor: pointer;">
-                    {path_str}
-                    <span class="path-risk {risk_class}">Risk: {risk:.2f}</span>
+                <div class="attack-path-card" onclick="showAttackPath({idx}, event)">
+                    <div class="path-header">
+                        <div class="path-title">
+                            <span class="path-source">{source}</span>
+                            <span class="path-arrow">→</span>
+                            <span class="path-target">{target}</span>
+                        </div>
+                        <div class="path-risk-badge {risk_class}">
+                            {risk:.0%}
+                        </div>
+                    </div>
+                    <div class="path-details">
+                        <div class="path-steps">{length} step{'s' if length != 1 else ''}</div>
+                        {f'<div class="path-description">{description}</div>' if description else ''}
+                    </div>
                 </div>
                 """
+            
+            if len(indexed_paths) > limit:
+                # Create a unique ID for this category
+                category_id = category.replace('_', '-')
+                remaining = len(indexed_paths) - limit
+                html += f'''<div id="show-more-{category_id}" class="show-more-link" onclick="showMorePaths('{category_id}', {limit}, {len(indexed_paths)})">... and {remaining} more</div>
+                <div id="more-paths-{category_id}" style="display: none;">'''
+                
+                # Add all remaining paths but hidden
+                for idx, path in indexed_paths[limit:]:
+                    if isinstance(path, dict):
+                        risk = path.get('risk_score', 0)
+                        path_str = path.get('path', 'Unknown path')
+                        description = path.get('description', '')
+                        length = path.get('length', 1)
+                        
+                        # Extract source and target (same logic as above)
+                        if 'path_nodes' in path and len(path['path_nodes']) >= 2:
+                            first_node = path['path_nodes'][0]
+                            last_node = path['path_nodes'][-1]
+                            if isinstance(first_node, dict):
+                                source = first_node.get('name', first_node.get('id', 'Unknown'))
+                            else:
+                                source = str(first_node)
+                            if isinstance(last_node, dict):
+                                target = last_node.get('name', last_node.get('id', 'Unknown'))
+                            else:
+                                target = str(last_node)
+                            # Fix: Number of edges is nodes - 1
+                            if len(path['path_nodes']) > 1:
+                                length = len(path['path_nodes']) - 1
+                            else:
+                                length = path.get('length', 1)
+                        else:
+                            source = 'Unknown'
+                            target = 'Unknown'
+                        
+                        source = self._clean_node_name(source)
+                        target = self._clean_node_name(target)
+                    else:
+                        # Handle AttackPath objects
+                        risk = path.risk_score if hasattr(path, 'risk_score') else 0
+                        description = path.description if hasattr(path, 'description') else ''
+                        # Fix: For AttackPath objects, check if it has path_nodes or path_edges
+                        if hasattr(path, 'path_nodes') and len(path.path_nodes) > 1:
+                            length = len(path.path_nodes) - 1  # Number of edges
+                        elif hasattr(path, 'path_edges') and len(path.path_edges) > 0:
+                            length = len(path.path_edges)  # Direct edge count
+                        elif hasattr(path, '__len__'):
+                            # Fallback: assume len() returns nodes, so subtract 1
+                            length = max(1, len(path) - 1)
+                        else:
+                            length = 1
+                        source = 'Unknown'
+                        target = 'Unknown'
+                    
+                    risk_class = 'risk-critical' if risk > 0.8 else 'risk-high' if risk > 0.6 else 'risk-medium' if risk > 0.4 else 'risk-low'
+                    
+                    html += f"""
+                    <div class="attack-path-card hidden-path" data-category="{category_id}" style="display: none;" onclick="showAttackPath({idx}, event)">
+                        <div class="path-header">
+                            <div class="path-title">
+                                <span class="path-source">{source}</span>
+                                <span class="path-arrow">→</span>
+                                <span class="path-target">{target}</span>
+                            </div>
+                            <div class="path-risk-badge {risk_class}">
+                                {risk:.0%}
+                            </div>
+                        </div>
+                        <div class="path-details">
+                            <div class="path-steps">{length} step{'s' if length != 1 else ''}</div>
+                            {f'<div class="path-description">{description}</div>' if description else ''}
+                        </div>
+                    </div>
+                    """
+                
+                html += '</div>'
+            
+            html += '</div>'
         
         return html
+    
+    def _clean_node_name(self, name: str) -> str:
+        """Clean up node names for display"""
+        if not name or name == 'Unknown':
+            return name
+            
+        # Remove prefixes like 'user:', 'sa:', 'role:', etc.
+        prefixes = ['user:', 'sa:', 'role:', 'project:', 'folder:', 'org:', 'group:', 'resource:']
+        for prefix in prefixes:
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        
+        # Shorten service account emails
+        if '@' in name and '.iam.gserviceaccount.com' in name:
+            name = name.split('@')[0]
+        
+        # Shorten role names
+        if name.startswith('roles/'):
+            name = name[6:]  # Remove 'roles/' prefix
+        
+        # Limit length
+        if len(name) > 50:
+            name = name[:47] + '...'
+            
+        return name
     
     def _get_standalone_template(self) -> str:
         """Get the JavaScript template for generating standalone reports"""
@@ -1661,34 +2472,42 @@ class HTMLVisualizer:
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
                 navigationButtons: true,
-                keyboard: true
+                keyboard: true,
+                navigationButtons": true,
+                keyboard": true
             }},
-            nodes: {{
-                borderWidth: 2,
-                borderWidthSelected: 4,
-                font: {{
-                    face: "Inter, sans-serif",
-                    size: 14,
-                    strokeWidth: 0,
-                    color: "#ffffff"
+            configure": {{
+                "enabled": false
+            }},
+            manipulation": {{
+                "enabled": false
+            }},
+            nodes": {{
+                "borderWidth": 2,
+                "borderWidthSelected": 4,
+                "font": {{
+                    "face": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                    "size": 14,
+                    "strokeWidth": 0,
+                    "color": "#ffffff"
                 }}
             }},
-            edges: {{
-                smooth: {{
-                    type: "continuous",
-                    forceDirection: "none"
+            edges": {{
+                "smooth": {{
+                    "type": "continuous",
+                    "forceDirection": "none"
                 }},
-                arrows: {{
-                    to: {{
-                        enabled: true,
-                        scaleFactor: 0.5
+                "arrows": {{
+                    "to": {{
+                        "enabled": true,
+                        "scaleFactor": 0.5
                     }}
                 }},
-                font: {{
-                    face: "Inter, sans-serif",
-                    size: 10,
-                    strokeWidth: 0,
-                    color: "#cccccc"
+                "font": {{
+                    "face": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                    "size": 10,
+                    "strokeWidth": 0,
+                    "color": "#cccccc"
                 }}
             }}
         }};
@@ -1779,18 +2598,24 @@ class HTMLVisualizer:
             # Determine color based on risk
             if highlight_nodes and node_id in highlight_nodes:
                 color = "#FFD700"  # Gold for highlighted nodes
+                border_color = "#FFA500"
             elif risk_scores and node_id in risk_scores:
                 risk = risk_scores[node_id].get('total', 0) if isinstance(risk_scores[node_id], dict) else risk_scores[node_id]
                 if risk > 0.8:
                     color = "#d32f2f"  # Critical
+                    border_color = "#b71c1c"
                 elif risk > 0.6:
                     color = "#f44336"  # High
+                    border_color = "#d32f2f"
                 elif risk > 0.4:
                     color = "#ff9800"  # Medium
+                    border_color = "#f57c00"
                 else:
                     color = self.config.visualization_html_node_colors.get(node_type, '#999999')
+                    border_color = "#666666"
             else:
                 color = self.config.visualization_html_node_colors.get(node_type, '#999999')
+                border_color = "#666666"
             
             # Create label
             label = node_data.get('name', node_id)
@@ -1816,31 +2641,55 @@ class HTMLVisualizer:
                 'id': node_id,
                 'label': label,
                 'title': self._create_node_tooltip(node_id, node_data, risk_scores),
-                'color': color,
+                'color': {
+                    'background': color,
+                    'border': border_color,
+                    'highlight': {
+                        'background': color,
+                        'border': '#ffffff'
+                    }
+                },
                 'shape': shape,
                 'size': 25 if (highlight_nodes and node_id in highlight_nodes) else 20,
                 'font': {
                     'face': 'Inter, sans-serif',
                     'size': 14,
-                    'color': '#000000',
-                    'strokeWidth': 0
+                    'color': '#ffffff',
+                    'strokeWidth': 3,
+                    'strokeColor': '#000000'
                 }
             })
         
         # Serialize edges
         for u, v, edge_data in self.graph.edges(data=True):
             edge_type = edge_data.get('type', 'unknown')
-            color = self.config.visualization_html_edge_colors.get(edge_type, '#999999')
             
-            width = 2 if edge_type in ['can_impersonate', 'can_impersonate_sa', 'can_create_service_account_key'] else 1
+            # Determine edge color and width based on type
+            if edge_type in ['can_impersonate', 'can_impersonate_sa', 'can_create_service_account_key']:
+                color = '#ff4444'
+                width = 3
+            elif edge_type in ['can_deploy_function_as', 'can_deploy_cloud_run_as', 'can_act_as_via_vm']:
+                color = '#ff8800'
+                width = 2
+            else:
+                color = self.config.visualization_html_edge_colors.get(edge_type, '#666666')
+                width = 1
             
             edges.append({
                 'from': u,
                 'to': v,
                 'title': self._create_edge_tooltip(edge_data),
-                'color': color,
+                'color': {
+                    'color': color,
+                    'highlight': '#ffffff'
+                },
                 'width': width,
-                'arrows': 'to'
+                'arrows': {
+                    'to': {
+                        'enabled': True,
+                        'scaleFactor': 0.5
+                    }
+                }
             })
         
         return {
@@ -1869,10 +2718,12 @@ class HTMLVisualizer:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        {self._get_inter_font_css()}
+        
         body {{
             margin: 0;
             padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f8f9fa;
             color: #1a1f36;
             line-height: 1.6;
@@ -2303,15 +3154,15 @@ class HTMLVisualizer:
         </div>
         
         <div class="sidebar">
+            <div class="sidebar-resizer"></div>
             <div class="sidebar-tabs">
-                <button class="tab active" onclick="showTab('legend', event)">Legend</button>
+                <button class="tab active" onclick="showTab('legend', event)">Dictionary</button>
                 <button class="tab" onclick="showTab('attacks', event)">Attack Paths</button>
-                <button class="tab" onclick="showTab('roles', event)">Dangerous Roles</button>
                 <button class="tab" onclick="showTab('paths', event)">Found Paths</button>
             </div>
             
             <div class="sidebar-content">
-                <!-- Legend Tab -->
+                <!-- Dictionary Tab (formerly Legend) -->
                 <div id="legend-tab" class="tab-content">
                     <button class="collapsible active" onclick="toggleCollapsible(this)">Node Types</button>
                     <div class="collapsible-content show">
@@ -2342,6 +3193,34 @@ class HTMLVisualizer:
                         <div class="legend-item">
                             <div class="legend-color" style="background-color: #757575;"></div>
                             <span>Role</span>
+                        </div>
+                    </div>
+                    
+                    <button class="collapsible" onclick="toggleCollapsible(this)">Node Shapes</button>
+                    <div class="collapsible-content">
+                        <div class="legend-item">
+                            <div class="legend-shape">●</div>
+                            <span>User (Circle)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">■</div>
+                            <span>Service Account (Square)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">▲</div>
+                            <span>Group (Triangle)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">▬</div>
+                            <span>Project/Folder (Box)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">★</div>
+                            <span>Organization (Star)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape">◆</div>
+                            <span>Role (Diamond)</span>
                         </div>
                     </div>
                     
@@ -2384,16 +3263,27 @@ class HTMLVisualizer:
                             <span>Low Risk (>0.2)</span>
                         </div>
                     </div>
+                    
+                    <button class="collapsible" onclick="toggleCollapsible(this)">Risk Calculation</button>
+                    <div class="collapsible-content">
+                        <div style="font-size: 13px; color: #6b7280; line-height: 1.6;">
+                            <p style="margin-bottom: 10px;"><strong>How Risk Scores are Calculated:</strong></p>
+                            <p style="margin-bottom: 8px;">• <strong>Critical (>80%):</strong> Direct privilege escalation paths like service account impersonation or key creation</p>
+                            <p style="margin-bottom: 8px;">• <strong>High (>60%):</strong> Indirect escalation via resource deployment (Cloud Functions, VMs, Cloud Run)</p>
+                            <p style="margin-bottom: 8px;">• <strong>Medium (>40%):</strong> Lateral movement or limited privilege paths</p>
+                            <p style="margin-bottom: 8px;">• <strong>Low (>20%):</strong> Read-only access or minimal impact paths</p>
+                            <p style="margin-top: 10px;"><strong>Factors:</strong></p>
+                            <p style="margin-bottom: 8px;">• Attack technique severity</p>
+                            <p style="margin-bottom: 8px;">• Number of steps (multi-step = higher risk)</p>
+                            <p style="margin-bottom: 8px;">• Target sensitivity (Org > Folder > Project)</p>
+                            <p style="margin-bottom: 8px;">• Node centrality in the graph</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Attack Paths Tab -->
                 <div id="attacks-tab" class="tab-content hidden">
                     {self._create_attack_explanations_html()}
-                </div>
-                
-                <!-- Dangerous Roles Tab -->
-                <div id="roles-tab" class="tab-content hidden">
-                    {self._create_dangerous_roles_html(dangerous_roles_info)}
                 </div>
                 
                 <!-- Found Paths Tab -->
@@ -2859,11 +3749,12 @@ class HTMLVisualizer:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attack Path: {graph_data['summary']}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
     <style>
+        {self._get_inter_font_css()}
+        
         * {{
             margin: 0;
             padding: 0;
@@ -3350,6 +4241,154 @@ class HTMLVisualizer:
         else:
             return "low"
     
+    def _get_logo_base64(self) -> str:
+        """Get the EscaGCP logo as base64"""
+        try:
+            # Try to load the logo from the static directory
+            import os
+            logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'images', 'escagcp-logo-vector-no-bg.png')
+            if os.path.exists(logo_path):
+                with open(logo_path, 'rb') as f:
+                    import base64
+                    return base64.b64encode(f.read()).decode('utf-8')
+        except Exception as e:
+            logger.debug(f"Could not load logo: {e}")
+        
+        # Return a placeholder if logo not found
+        return ""
+    
+    def _get_inter_font_base64(self) -> str:
+        """Get the Inter font as base64"""
+        try:
+            # Load the Inter variable font from the static directory
+            import os
+            font_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'Fonts', 'Inter', 'Inter-VariableFont_opsz,wght.ttf')
+            if os.path.exists(font_path):
+                with open(font_path, 'rb') as f:
+                    import base64
+                    return base64.b64encode(f.read()).decode('utf-8')
+        except Exception as e:
+            logger.debug(f"Could not load Inter font: {e}")
+        
+        # Return empty string if font not found (will fall back to Google Fonts)
+        return ""
+    
+    def _get_inter_font_css(self) -> str:
+        """Get the CSS for Inter font with embedded base64 or Google Fonts fallback"""
+        font_base64 = self._get_inter_font_base64()
+        
+        if font_base64:
+            # Use embedded font
+            return f"""
+    @font-face {{
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url(data:font/truetype;charset=utf-8;base64,{font_base64}) format('truetype-variations');
+        font-named-instance: 'Regular';
+    }}
+    
+    @font-face {{
+        font-family: 'Inter';
+        font-style: italic;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url(data:font/truetype;charset=utf-8;base64,{font_base64}) format('truetype-variations');
+        font-named-instance: 'Italic';
+    }}"""
+        else:
+            # Fallback to Google Fonts
+            return """
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');"""
+    
+    def _create_react_modal_integration(self) -> str:
+        """Create the integration code for React modals"""
+        return """
+        <!-- React Modal Integration -->
+        <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        
+        <style>
+            /* Tailwind-like utility classes for React components */
+            .flex { display: flex; }
+            .flex-col { flex-direction: column; }
+            .items-center { align-items: center; }
+            .justify-between { justify-content: space-between; }
+            .gap-2 { gap: 0.5rem; }
+            .gap-3 { gap: 0.75rem; }
+            .gap-4 { gap: 1rem; }
+            .p-3 { padding: 0.75rem; }
+            .rounded-lg { border-radius: 0.5rem; }
+            .text-sm { font-size: 0.875rem; font-family: 'Inter', sans-serif; }
+            .text-xs { font-size: 0.75rem; font-family: 'Inter', sans-serif; }
+            .font-medium { font-weight: 500; }
+            .font-semibold { font-weight: 600; }
+            .bg-opacity-10 { background-opacity: 0.1; }
+            .transition-colors { transition: background-color 0.15s; }
+            .cursor-pointer { cursor: pointer; }
+            .hover\\:bg-gray-100:hover { background-color: #f3f4f6; }
+            .dark\\:hover\\:bg-gray-800:hover { background-color: #1f2937; }
+            .text-gray-500 { color: #6b7280; }
+            .dark\\:text-gray-400 { color: #9ca3af; }
+            .ml-2 { margin-left: 0.5rem; }
+            .ml-4 { margin-left: 1rem; }
+            .mt-2 { margin-top: 0.5rem; }
+            .mb-4 { margin-bottom: 1rem; }
+            .w-full { width: 100%; }
+            .max-w-4xl { max-width: 56rem; }
+            .max-w-5xl { max-width: 64rem; }
+            .max-h-\\[80vh\\] { max-height: 80vh; }
+            .overflow-y-auto { overflow-y: auto; }
+            .space-y-4 > * + * { margin-top: 1rem; }
+            
+            /* Badge styles */
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.125rem 0.5rem;
+                border-radius: 0.25rem;
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+            .badge-secondary {
+                background-color: #e5e7eb;
+                color: #374151;
+            }
+            .badge-destructive {
+                background-color: #fee2e2;
+                color: #dc2626;
+            }
+            .badge-warning {
+                background-color: #fef3c7;
+                color: #f59e0b;
+            }
+            
+            /* Icon colors */
+            .text-blue-500 { color: #3b82f6; }
+            .text-green-500 { color: #10b981; }
+            .text-red-500 { color: #ef4444; }
+            .text-yellow-500 { color: #f59e0b; }
+            .text-orange-500 { color: #f97316; }
+            .text-purple-500 { color: #8b5cf6; }
+            .text-gray-500 { color: #6b7280; }
+            .text-indigo-500 { color: #6366f1; }
+            
+            .bg-blue-500 { background-color: #3b82f6; }
+            .bg-green-500 { background-color: #10b981; }
+            .bg-red-500 { background-color: #ef4444; }
+            .bg-yellow-500 { background-color: #f59e0b; }
+            .bg-orange-500 { background-color: #f97316; }
+            .bg-purple-500 { background-color: #8b5cf6; }
+            .bg-gray-500 { background-color: #6b7280; }
+            .bg-indigo-500 { background-color: #6366f1; }
+        </style>
+        
+        <div id="nodes-modal-container"></div>
+        <div id="edges-modal-container"></div>
+        """
+    
     def _get_dashboard_javascript(self) -> str:
         """Get the JavaScript code for the dashboard without double braces"""
         return """
@@ -3375,11 +4414,213 @@ class HTMLVisualizer:
         }
         
         function showModal(modalType) {
-            document.getElementById(modalType + 'Modal').style.display = 'block';
+            if (modalType === 'nodes') {
+                // Show React nodes modal
+                if (window.nodesModalData) {
+                    showNodesModal(window.nodesModalData);
+                }
+            } else if (modalType === 'edges') {
+                // Show React edges modal
+                if (window.edgesModalData) {
+                    showEdgesModal(window.edgesModalData);
+                }
+            } else {
+                // Show regular modal
+                document.getElementById(modalType + 'Modal').style.display = 'block';
+            }
         }
         
         function closeModal(modalType) {
             document.getElementById(modalType + 'Modal').style.display = 'none';
+        }
+        
+        // React modal functions
+        function showNodesModal(nodesData) {
+            // Simple modal implementation without full React components
+            const container = document.getElementById('nodes-modal-container');
+            if (!container) return;
+            
+            let html = '<div class="modal" style="display: block;">';
+            html += '<div class="modal-content" style="max-width: 56rem; max-height: 80vh;">';
+            html += '<div class="modal-header">';
+            html += '<h2 class="modal-title">Total Nodes</h2>';
+            html += '<span class="close" onclick="closeNodesModal()">&times;</span>';
+            html += '</div>';
+            html += '<div style="padding: 20px; overflow-y: auto; max-height: 70vh;">';
+            
+            // Add search and filters
+            html += '<div class="flex gap-4" style="margin-bottom: 20px;">';
+            html += '<input type="text" id="nodes-search" placeholder="Search nodes..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onkeyup="filterNodes()">';
+            html += '<select id="nodes-type-filter" onchange="filterNodes()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
+            html += '<option value="all">All Types</option>';
+            Object.keys(nodesData).forEach(type => {
+                html += `<option value="${type}">${type}</option>`;
+            });
+            html += '</select>';
+            html += '</div>';
+            
+            // Add nodes by type
+            html += '<div id="nodes-list">';
+            Object.entries(nodesData).forEach(([type, nodes]) => {
+                html += `<div class="node-type-section" data-type="${type}">`;
+                html += `<h3 style="margin: 20px 0 10px 0; font-weight: 600;">${type} (${nodes.length})</h3>`;
+                nodes.forEach(node => {
+                    html += `<div class="node-item" data-search="${node.name.toLowerCase()} ${node.id.toLowerCase()}" style="padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 4px; cursor: pointer;" onclick="highlightNode('${node.id}')">`;
+                    html += `<div style="font-weight: 500;">${node.name}</div>`;
+                    html += `<div style="font-size: 12px; color: #666;">ID: ${node.id} | In: ${node.inDegree} | Out: ${node.outDegree}</div>`;
+                    if (node.metadata && Object.keys(node.metadata).length > 0) {
+                        html += '<div style="font-size: 11px; color: #888; margin-top: 4px;">';
+                        Object.entries(node.metadata).forEach(([key, value]) => {
+                            html += `${key}: ${value} `;
+                        });
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+            });
+            html += '</div>';
+            
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+        
+        function showEdgesModal(edgesData) {
+            // Simple modal implementation without full React components
+            const container = document.getElementById('edges-modal-container');
+            if (!container) return;
+            
+            let html = '<div class="modal" style="display: block;">';
+            html += '<div class="modal-content" style="max-width: 64rem; max-height: 80vh;">';
+            html += '<div class="modal-header">';
+            html += '<h2 class="modal-title">Total Edges</h2>';
+            html += '<span class="close" onclick="closeEdgesModal()">&times;</span>';
+            html += '</div>';
+            html += '<div style="padding: 20px; overflow-y: auto; max-height: 70vh;">';
+            
+            // Add search and filters
+            html += '<div class="flex gap-4" style="margin-bottom: 20px;">';
+            html += '<input type="text" id="edges-search" placeholder="Search edges..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onkeyup="filterEdges()">';
+            html += '<select id="edges-type-filter" onchange="filterEdges()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
+            html += '<option value="all">All Types</option>';
+            Object.keys(edgesData).forEach(type => {
+                html += `<option value="${type}">${type}</option>`;
+            });
+            html += '</select>';
+            html += '</div>';
+            
+            // Add edges by type
+            html += '<div id="edges-list">';
+            Object.entries(edgesData).forEach(([type, edges]) => {
+                html += `<div class="edge-type-section" data-type="${type}">`;
+                html += `<h3 style="margin: 20px 0 10px 0; font-weight: 600;">${type} (${edges.length})</h3>`;
+                edges.forEach(edge => {
+                    const searchText = `${edge.sourceName} ${edge.targetName} ${edge.type}`.toLowerCase();
+                    html += `<div class="edge-item" data-search="${searchText}" style="padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 4px;">`;
+                    html += `<div style="font-weight: 500;">${edge.sourceName} → ${edge.targetName}</div>`;
+                    html += `<div style="font-size: 12px; color: #666;">Type: ${edge.type}</div>`;
+                    if (edge.permission) {
+                        html += `<div style="font-size: 11px; color: #888;">Permission: ${edge.permission}</div>`;
+                    }
+                    if (edge.rationale) {
+                        html += `<div style="font-size: 11px; color: #888;">Rationale: ${edge.rationale}</div>`;
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+            });
+            html += '</div>';
+            
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+        
+        function closeNodesModal() {
+            const container = document.getElementById('nodes-modal-container');
+            if (container) container.innerHTML = '';
+        }
+        
+        function closeEdgesModal() {
+            const container = document.getElementById('edges-modal-container');
+            if (container) container.innerHTML = '';
+        }
+        
+        function filterNodes() {
+            const searchTerm = document.getElementById('nodes-search').value.toLowerCase();
+            const typeFilter = document.getElementById('nodes-type-filter').value;
+            
+            document.querySelectorAll('.node-type-section').forEach(section => {
+                const sectionType = section.getAttribute('data-type');
+                if (typeFilter !== 'all' && sectionType !== typeFilter) {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = 'block';
+                    
+                    let hasVisibleNodes = false;
+                    section.querySelectorAll('.node-item').forEach(item => {
+                        const searchData = item.getAttribute('data-search');
+                        if (searchData.includes(searchTerm)) {
+                            item.style.display = 'block';
+                            hasVisibleNodes = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    if (!hasVisibleNodes && searchTerm) {
+                        section.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        function filterEdges() {
+            const searchTerm = document.getElementById('edges-search').value.toLowerCase();
+            const typeFilter = document.getElementById('edges-type-filter').value;
+            
+            document.querySelectorAll('.edge-type-section').forEach(section => {
+                const sectionType = section.getAttribute('data-type');
+                if (typeFilter !== 'all' && sectionType !== typeFilter) {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = 'block';
+                    
+                    let hasVisibleEdges = false;
+                    section.querySelectorAll('.edge-item').forEach(item => {
+                        const searchData = item.getAttribute('data-search');
+                        if (searchData.includes(searchTerm)) {
+                            item.style.display = 'block';
+                            hasVisibleEdges = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    if (!hasVisibleEdges && searchTerm) {
+                        section.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        function highlightNode(nodeId) {
+            // Highlight node in the graph
+            if (window.graphNetwork) {
+                window.graphNetwork.selectNodes([nodeId]);
+                window.graphNetwork.focus(nodeId, {
+                    scale: 1.5,
+                    animation: {
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }
+                });
+            }
         }
         
         function toggleCollapsible(element) {
@@ -3679,42 +4920,50 @@ class HTMLVisualizer:
         const options = {
             physics: {
                 enabled: true,
-                solver: "forceAtlas2Based",
-                forceAtlas2Based: {
-                    gravitationalConstant: -50,
-                    centralGravity: 0.01,
-                    springLength: 100,
-                    springConstant: 0.08,
+                solver: "barnesHut",
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 95,
+                    springConstant: 0.04,
                     damping: 0.09,
-                    avoidOverlap: 0.5
+                    avoidOverlap: 0.1
                 },
                 stabilization: {
                     enabled: true,
                     iterations: 1000,
-                    updateInterval: 25
-                }
+                    updateInterval: 100,
+                    onlyDynamicEdges: false,
+                    fit: true
+                },
+                timestep: 0.5,
+                adaptiveTimestep: true
             },
             interaction: {
                 hover: true,
                 tooltipDelay: 200,
                 hideEdgesOnDrag: true,
                 navigationButtons: true,
-                keyboard: true
+                keyboard: true,
+                zoomView: true,
+                dragView: true
             },
             nodes: {
                 borderWidth: 2,
                 borderWidthSelected: 4,
                 font: {
-                    face: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                    color: '#ffffff',
                     size: 14,
-                    strokeWidth: 0,
-                    color: "#ffffff"
+                    face: 'Inter, sans-serif',
+                    strokeWidth: 3,
+                    strokeColor: '#000000'
                 }
             },
             edges: {
                 smooth: {
                     type: "continuous",
-                    forceDirection: "none"
+                    forceDirection: "none",
+                    roundness: 0.5
                 },
                 arrows: {
                     to: {
@@ -3723,19 +4972,126 @@ class HTMLVisualizer:
                     }
                 },
                 font: {
-                    face: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                    color: '#ffffff',
                     size: 10,
-                    strokeWidth: 0,
-                    color: "#cccccc"
-                }
+                    face: 'Inter, sans-serif',
+                    strokeWidth: 3,
+                    strokeColor: '#000000',
+                    align: 'middle'
+                },
+                labelHighlightBold: true
+            },
+            layout: {
+                improvedLayout: true,
+                hierarchical: false
             }
         };
         
         const network = new vis.Network(container, data, options);
+        
+        // Stop physics after stabilization to prevent dancing
+        network.on("stabilizationIterationsDone", function () {
+            network.setOptions({ physics: false });
+        });
     <\/script>
 </body>
 </html>`;
             return html;
+        }
+        
+        function _clean_node_name(name) {
+            // Clean node name for display
+            if (name && name.includes(':')) {
+                const parts = name.split(':', 2);
+                if (parts.length === 2) {
+                    return parts[1];
+                }
+            }
+            return name || '';
+        }
+        
+        function extractSourceTarget(pathStr) {
+            // Extract source and target from path string
+            if (!pathStr) return { source: 'Unknown', target: 'Unknown' };
+            
+            // Try different patterns
+            // Pattern 1: "source -> target"
+            let match = pathStr.match(/^([^-]+)\s*->\s*(.+)$/);
+            if (match) {
+                return { 
+                    source: _clean_node_name(match[1].trim()), 
+                    target: _clean_node_name(match[2].trim()) 
+                };
+            }
+            
+            // Pattern 2: "Attack path from source to target"
+            match = pathStr.match(/from\s+([^\s]+)\s+to\s+([^\s]+)/i);
+            if (match) {
+                return { 
+                    source: _clean_node_name(match[1]), 
+                    target: _clean_node_name(match[2]) 
+                };
+            }
+            
+            // Pattern 3: Just take first and last word
+            const words = pathStr.split(/\s+/);
+            if (words.length >= 2) {
+                return { 
+                    source: _clean_node_name(words[0]), 
+                    target: _clean_node_name(words[words.length - 1]) 
+                };
+            }
+            
+            return { source: 'Unknown', target: 'Unknown' };
+        }
+        
+        function showMoreHolders(roleId) {
+            const moreBtn = document.getElementById('more-btn-' + roleId);
+            const moreHolders = document.getElementById('more-holders-' + roleId);
+            
+            if (moreHolders.style.display === 'none') {
+                moreHolders.style.display = 'block';
+                moreBtn.textContent = 'Show less';
+            } else {
+                moreHolders.style.display = 'none';
+                const count = moreBtn.textContent.match(/\d+/);
+                moreBtn.textContent = '+' + count + ' more';
+            }
+        }
+        
+        function showMorePaths(categoryId, currentLimit, totalPaths) {
+            const morePathsContainer = document.getElementById('more-paths-' + categoryId);
+            const showMoreLink = document.getElementById('show-more-' + categoryId);
+            
+            if (!morePathsContainer || !showMoreLink) {
+                console.error('Container or link not found for category:', categoryId);
+                return;
+            }
+            
+            // Get all hidden paths in this category
+            const allHiddenPaths = morePathsContainer.querySelectorAll('.attack-path-card');
+            let shown = 0;
+            let totalShown = currentLimit;
+            
+            // Count currently visible paths and show next 10
+            allHiddenPaths.forEach(path => {
+                if (path.style.display !== 'none' && path.style.display !== '') {
+                    totalShown++;
+                } else if (shown < 10) {
+                    // Show this path
+                    path.style.display = 'block';
+                    shown++;
+                    totalShown++;
+                }
+            });
+            
+            // Update or hide the show more link
+            const remaining = totalPaths - totalShown;
+            if (remaining > 0) {
+                showMoreLink.textContent = '... and ' + remaining + ' more';
+            } else {
+                showMoreLink.style.display = 'none';
+            }
         }
         
         function showAttackPath(pathIndex, event) {
@@ -3752,18 +5108,9 @@ class HTMLVisualizer:
             }
             
             console.log('Attack path data:', path);
-            console.log('Has visualization_metadata:', !!path.visualization_metadata);
             
-            // Check if path has visualization data
-            if (path.visualization_metadata) {
-                console.log('Calling showAttackPathModal');
-                // Show attack path modal with visualization
-                showAttackPathModal(path);
-            } else {
-                console.log('No visualization_metadata, showing alert');
-                // Show simple path details
-                alert('Attack Path Details:\\n\\n' + (path.path || path.description || 'No details available'));
-            }
+            // Always show the attack path modal, even without full visualization metadata
+            showAttackPathModal(path);
         }
         
         function showAttackPathModal(pathData) {
@@ -3780,15 +5127,75 @@ class HTMLVisualizer:
                 document.body.appendChild(modal);
             }
             
-            // Create modal content with attack path visualization
+            // Extract visualization data - handle both formats
             const vizData = pathData.visualization_metadata || {};
-            const nodeMetadata = vizData.node_metadata || [];
-            const edgeMetadata = vizData.edge_metadata || [];
+            let nodeMetadata = vizData.node_metadata || [];
+            let edgeMetadata = vizData.edge_metadata || [];
             const techniques = vizData.techniques || vizData.escalation_techniques || [];
+            
+            // If no visualization metadata, try to construct from path data
+            if (nodeMetadata.length === 0 && pathData.path_nodes) {
+                nodeMetadata = pathData.path_nodes.map((node, idx) => ({
+                    id: node.id || node,
+                    label: node.name || node.id || node,
+                    type: node.type || 'unknown',
+                    color: '#6b46c1',
+                    risk_level: idx === 0 ? 'source' : idx === pathData.path_nodes.length - 1 ? 'target' : 'intermediate'
+                }));
+            }
+            
+            if (edgeMetadata.length === 0 && pathData.path_edges) {
+                edgeMetadata = pathData.path_edges.map((edge, idx) => ({
+                    source: edge.source_id || edge.source || pathData.path_nodes[idx].id,
+                    target: edge.target_id || edge.target || pathData.path_nodes[idx + 1].id,
+                    label: edge.type || 'connects to',
+                    type: edge.type || 'unknown',
+                    risk_score: edge.risk_score || 0.5
+                }));
+            }
+            
+            // If still no nodes, create a simple path visualization
+            if (nodeMetadata.length === 0) {
+                // Try to extract from path string
+                if (pathData.path && pathData.path.includes('--[')) {
+                    const parts = pathData.path.split(/\s*--\[|\]-->\s*/);
+                    for (let i = 0; i < parts.length; i += 2) {
+                        if (parts[i]) {
+                            nodeMetadata.push({
+                                id: `node-${i}`,
+                                label: parts[i].trim(),
+                                type: 'unknown',
+                                color: '#6b46c1',
+                                risk_level: i === 0 ? 'source' : i >= parts.length - 2 ? 'target' : 'intermediate'
+                            });
+                            
+                            if (i < parts.length - 2 && parts[i + 1]) {
+                                edgeMetadata.push({
+                                    source: `node-${i}`,
+                                    target: `node-${i + 2}`,
+                                    label: parts[i + 1].trim(),
+                                    type: parts[i + 1].trim(),
+                                    risk_score: 0.7
+                                });
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback: create minimal visualization
+                    nodeMetadata = [
+                        { id: 'source', label: 'Source', type: 'unknown', color: '#6b46c1', risk_level: 'source' },
+                        { id: 'target', label: 'Target', type: 'unknown', color: '#dc2626', risk_level: 'target' }
+                    ];
+                    edgeMetadata = [
+                        { source: 'source', target: 'target', label: 'Attack Path', type: 'unknown', risk_score: pathData.risk_score || 0.5 }
+                    ];
+                }
+            }
             
             console.log('Visualization data:', vizData);
             console.log('Nodes:', nodeMetadata);
             console.log('Edges:', edgeMetadata);
+            console.log('Techniques:', techniques);
             
             // Convert nodes to vis.js format
             const visNodes = nodeMetadata.map((node, index) => {
@@ -4095,13 +5502,60 @@ class HTMLVisualizer:
             }, 200);
         }
         
-        // Window click handler to close modals
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+        // Sidebar resizer functionality
+        function initSidebarResizer() {
+            const sidebar = document.querySelector('.sidebar');
+            const resizer = document.querySelector('.sidebar-resizer');
+            
+            if (!sidebar || !resizer) {
+                console.error('Sidebar or resizer not found');
+                return;
             }
-            if (event.target.id === 'shareModal') {
-                closeShareModal();
-            }
+            
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+            
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = sidebar.offsetWidth;
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                // Calculate new width (sidebar is on the right, so we subtract)
+                const width = startWidth - (e.clientX - startX);
+                
+                // Constrain width between min and max
+                if (width >= 300 && width <= 800) {
+                    sidebar.style.width = width + 'px';
+                    
+                    // Trigger a resize event for the graph to adjust
+                    if (window.graphNetwork) {
+                        window.graphNetwork.redraw();
+                    }
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    resizer.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = ''; // Re-enable text selection
+                    
+                    // Final redraw of the graph
+                    if (window.graphNetwork) {
+                        window.graphNetwork.fit();
+                    }
+                }
+            });
         }
+        
         """
