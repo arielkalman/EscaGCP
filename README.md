@@ -29,15 +29,15 @@ The tool will generate an interactive dashboard like this:
 ## 📸 Screenshots
 
 ### Interactive Security Dashboard
-![EscaGCP Dashboard Overview](image.png)
+![EscaGCP Dashboard Overview](/docs/screenshots/image.png)
 *The main dashboard showing the interactive graph visualization with 137 nodes and 426 edges. The graph displays IAM relationships between users, service accounts, groups, and resources with risk-based coloring.*
 
 ### Attack Path Visualization
-![Attack Path Analysis](image%20copy.png)
+![Attack Path Analysis](/docs/screenshots/image%20copy.png)
 *Detailed attack path visualization showing a multi-step privilege escalation chain. The modal displays the attack techniques used, risk scores, and step-by-step exploitation path from a user to a privileged service account.*
 
 ### Real-time Collection Progress
-![Data Collection Progress](image%20copy%202.png)
+![Data Collection Progress](/docs/screenshots/image%20copy%202.png)
 *Live progress view during data collection from GCP, showing the tool gathering IAM policies, service accounts, resources, and audit logs across multiple projects.*
 
 ## 🎯 Key Features
