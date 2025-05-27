@@ -22,10 +22,6 @@ escagcp analyze --graph graph/escagcp_graph_*.json
 escagcp visualize --graph graph/escagcp_graph_*.json
 ```
 
-The tool will generate an interactive dashboard like this:
-
-<img src="/docs/screenshots/image.png" alt="EscaGCP Dashboard" width="600"/>
-
 ## 📸 Screenshots
 
 ### Interactive Security Dashboard
