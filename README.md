@@ -1,6 +1,5 @@
 # <img src="gcphound/static/images/escagcp-logo-vector-no-bg.png" alt="EscaGCP Logo" height="40" style="vertical-align: middle;"> EscaGCP
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![GCP](https://img.shields.io/badge/GCP-Security-orange.svg)](https://cloud.google.com/)
 
@@ -81,13 +80,9 @@ EscaGCP detects all known GCP privilege escalation techniques:
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-## 📝 License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
 ## ⚠️ Security Notice
 
-EscaGCP collects sensitive information about your GCP environment. Before sharing outputs, review the [Security Checklist](docs/SECURITY_CHECKLIST.md).
+EscaGCP collects sensitive information about your GCP environment and save it locally. Before sharing outputs, review the [Security Checklist](docs/SECURITY_CHECKLIST.md).
 
 ## 🙏 Acknowledgments
 
