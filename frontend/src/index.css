@@ -1,0 +1,302 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 
+                 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-feature-settings: 'cv03', 'cv04', 'cv11';
+  }
+}
+
+/* GCPHound specific styles */
+@layer utilities {
+  .risk-critical {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+  
+  .risk-high {
+    @apply bg-orange-100 text-orange-800 border-orange-200;
+  }
+  
+  .risk-medium {
+    @apply bg-amber-100 text-amber-800 border-amber-200;
+  }
+  
+  .risk-low {
+    @apply bg-lime-100 text-lime-800 border-lime-200;
+  }
+  
+  .risk-info {
+    @apply bg-cyan-100 text-cyan-800 border-cyan-200;
+  }
+
+  .node-user {
+    @apply text-blue-600;
+  }
+  
+  .node-service-account {
+    @apply text-green-600;
+  }
+  
+  .node-group {
+    @apply text-yellow-600;
+  }
+  
+  .node-project {
+    @apply text-red-600;
+  }
+  
+  .node-folder {
+    @apply text-orange-600;
+  }
+  
+  .node-organization {
+    @apply text-purple-600;
+  }
+  
+  .node-role {
+    @apply text-gray-600;
+  }
+  
+  .node-resource {
+    @apply text-teal-600;
+  }
+
+  .graph-container {
+    @apply w-full h-full border border-border rounded-lg bg-card;
+  }
+
+  .sidebar-panel {
+    @apply bg-card border-l border-border h-full overflow-hidden;
+  }
+  
+  .attack-path-item {
+    @apply p-4 border border-border rounded-lg bg-card hover:bg-accent transition-colors cursor-pointer;
+  }
+
+  .statistics-card {
+    @apply p-6 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer;
+  }
+}
+
+/* vis.js network customizations */
+.vis-network {
+  outline: none;
+}
+
+.vis-network:focus {
+  outline: none;
+}
+
+/* Loading animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Scrollbar styling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground));
+}
+
+@layer components {
+  /* Risk level classes */
+  .risk-critical {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  .risk-high {
+    @apply bg-orange-100 text-orange-800 border-orange-200;
+  }
+
+  .risk-medium {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  .risk-low {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
+  }
+
+  .risk-info {
+    @apply bg-gray-100 text-gray-800 border-gray-200;
+  }
+
+  /* Node type colors */
+  .node-user {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  .node-service-account {
+    @apply bg-emerald-100 text-emerald-800;
+  }
+
+  .node-group {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .node-project {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .node-folder {
+    @apply bg-orange-100 text-orange-800;
+  }
+
+  .node-organization {
+    @apply bg-purple-100 text-purple-800;
+  }
+
+  .node-role {
+    @apply bg-gray-100 text-gray-800;
+  }
+
+  .node-resource {
+    @apply bg-cyan-100 text-cyan-800;
+  }
+
+  /* Layout helpers */
+  .graph-container {
+    @apply relative w-full h-full overflow-hidden bg-white border border-border rounded-lg;
+  }
+
+  .sidebar-panel {
+    @apply bg-white border-l border-border p-4 overflow-y-auto;
+  }
+
+  .attack-path-item {
+    @apply p-3 border border-border rounded-md hover:bg-accent/50 transition-colors cursor-pointer;
+  }
+
+  .statistics-card {
+    @apply bg-card text-card-foreground border border-border rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer;
+  }
+
+  /* Text truncation utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent;
+  }
+
+  /* Glass effect */
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg;
+  }
+
+  /* Hover lift effect */
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg;
+  }
+}
+
+/* Chart tooltip styles */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  @apply bg-background border border-border rounded-lg shadow-lg !important;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-label {
+  @apply text-foreground font-medium !important;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item {
+  @apply text-muted-foreground !important;
+}

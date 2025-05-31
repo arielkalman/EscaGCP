@@ -2,17 +2,27 @@
 Command-line interface for EscaGCP
 """
 
-import click
 import json
 import sys
+import glob
+import os
+import subprocess
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, List, Dict, Any
-from .utils import get_logger, AuthManager, Config
-from .collectors import CollectionOrchestrator, LogsCollector
-from .graph import GraphBuilder, GraphQuery, GraphExporter
-from .analyzers import PathAnalyzer
-from .visualizers import HTMLVisualizer, GraphMLVisualizer
+from typing import Optional, Dict, Any, List
+import click
+import networkx as nx
+
+from .utils.logger import get_logger
+from .utils.config import load_config
+from .utils.auth import AuthManager
+from .collectors.orchestrator import CollectionOrchestrator
+from .graph.builder import GraphBuilder
+from .graph.exporter import GraphExporter
+from .graph.query import GraphQuery
+from .graph.models import Node, Edge, NodeType, EdgeType, AttackPath
+from .analyzers.paths import PathAnalyzer
+from .visualizers.html import HTMLVisualizer
 
 
 logger = get_logger(__name__)
@@ -25,7 +35,7 @@ def cli(ctx, config):
     """EscaGCP - Map GCP IAM relationships and discover attack paths"""
     # Load configuration
     config_path = config or 'config/default.yaml'
-    ctx.obj = Config.from_yaml(config_path)
+    ctx.obj = load_config(config_path)
     logger.info("EscaGCP initialized")
 
 
@@ -864,12 +874,216 @@ def query(config, graph, source, target, query_type):
         sys.exit(1)
 
 
+def _save_data_for_react_frontend(graph_file: str, analysis_file: str) -> bool:
+    """
+    Save graph and analysis data in the format expected by the React frontend.
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        frontend_dir = Path(__file__).parent.parent / "frontend"
+        if not frontend_dir.exists():
+            logger.warning("Frontend directory not found. React integration not available.")
+            return False
+        
+        # Create data directories
+        data_dir = frontend_dir / "public" / "data"
+        graph_dir = data_dir / "graph"
+        analysis_dir = data_dir / "analysis"
+        
+        graph_dir.mkdir(parents=True, exist_ok=True)
+        analysis_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Load graph data
+        with open(graph_file, 'r') as f:
+            graph_data = json.load(f)
+        
+        # Load analysis data
+        with open(analysis_file, 'r') as f:
+            analysis_data = json.load(f)
+        
+        # Convert graph data to React format
+        react_graph_data = {
+            "nodes": graph_data.get("nodes", []),
+            "edges": graph_data.get("edges", []),
+            "metadata": {
+                "total_nodes": len(graph_data.get("nodes", [])),
+                "total_edges": len(graph_data.get("edges", [])),
+                "collection_time": graph_data.get("metadata", {}).get("collection_time", datetime.now().isoformat()),
+                "gcp_projects": graph_data.get("metadata", {}).get("gcp_projects", []),
+                "gcp_organization": graph_data.get("metadata", {}).get("gcp_organization"),
+                "generator_version": "1.0.0"
+            }
+        }
+        
+        # Ensure edges have IDs
+        for i, edge in enumerate(react_graph_data["edges"]):
+            if "id" not in edge:
+                edge["id"] = f"edge_{i}_{edge.get('source', '')}_to_{edge.get('target', '')}"
+        
+        # Convert analysis data to React format
+        statistics = analysis_data.get("statistics", {})
+        attack_paths = analysis_data.get("attack_paths", {})
+        
+        react_analysis_data = {
+            "statistics": {
+                "total_nodes": statistics.get("total_nodes", react_graph_data["metadata"]["total_nodes"]),
+                "total_edges": statistics.get("total_edges", react_graph_data["metadata"]["total_edges"]),
+                "attack_paths": statistics.get("total_attack_paths", 0),
+                "high_risk_nodes": statistics.get("high_risk_nodes", 0),
+                "dangerous_roles": statistics.get("dangerous_roles", 0),
+                "privilege_escalation_paths": statistics.get("privilege_escalation_paths", 0),
+                "lateral_movement_paths": statistics.get("lateral_movement_paths", 0),
+                "critical_nodes": statistics.get("critical_nodes", 0),
+                "vulnerabilities": statistics.get("vulnerabilities", 0)
+            },
+            "attack_paths": {
+                "critical": attack_paths.get("critical", []),
+                "critical_multi_step": attack_paths.get("critical_multi_step", []),
+                "privilege_escalation": attack_paths.get("privilege_escalation", []),
+                "lateral_movement": attack_paths.get("lateral_movement", []),
+                "high": attack_paths.get("high", []),
+                "medium": attack_paths.get("medium", []),
+                "low": attack_paths.get("low", [])
+            },
+            "risk_scores": analysis_data.get("risk_scores", {}),
+            "vulnerabilities": analysis_data.get("vulnerabilities", []),
+            "critical_nodes": analysis_data.get("critical_nodes", []),
+            "dangerous_roles": analysis_data.get("dangerous_roles", [])
+        }
+        
+        # Save graph data
+        graph_output = graph_dir / "latest.json"
+        with open(graph_output, 'w') as f:
+            json.dump(react_graph_data, f, indent=2)
+        
+        # Save analysis data
+        analysis_output = analysis_dir / "latest.json"
+        with open(analysis_output, 'w') as f:
+            json.dump(react_analysis_data, f, indent=2)
+        
+        click.echo(f"✅ Data saved for React frontend:")
+        click.echo(f"   Graph: {graph_output}")
+        click.echo(f"   Analysis: {analysis_output}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to save data for React frontend: {e}")
+        click.echo(f"❌ Error saving data for React frontend: {e}")
+        return False
+
+
+def _start_react_frontend() -> Optional[subprocess.Popen]:
+    """
+    Start the React development server.
+    
+    Returns:
+        subprocess.Popen: The server process if successful
+        "already_running": If server is already running 
+        None: If failed to start
+    """
+    try:
+        import subprocess
+        import time
+        import os
+        
+        # Get the project root directory (where both gcphound and frontend directories are)
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent  # Go up from gcphound/cli.py to project root
+        frontend_dir = project_root / "frontend"
+        
+        if not frontend_dir.exists():
+            logger.warning(f"Frontend directory not found at: {frontend_dir}")
+            return None
+        
+        # Check if package.json exists
+        package_json = frontend_dir / "package.json"
+        if not package_json.exists():
+            logger.warning(f"Frontend package.json not found at: {package_json}")
+            return None
+        
+        # Check if node_modules exists, if not install dependencies
+        node_modules = frontend_dir / "node_modules"
+        if not node_modules.exists():
+            click.echo("Installing frontend dependencies...")
+            install_process = subprocess.run(
+                ["npm", "install"],
+                cwd=frontend_dir,
+                capture_output=True,
+                text=True
+            )
+            if install_process.returncode != 0:
+                click.echo(f"Failed to install dependencies: {install_process.stderr}")
+                return None
+        
+        # Check if the dev server is already running
+        try:
+            import requests
+            response = requests.get("http://localhost:5173", timeout=2)
+            if response.status_code == 200:
+                click.echo("✅ React development server is already running on http://localhost:5173")
+                return "already_running"  # Special return value for already running
+        except:
+            pass  # Server not running, we'll start it
+        
+        # Start the development server
+        click.echo("Starting React development server...")
+        dev_process = subprocess.Popen(
+            ["npm", "run", "dev"],
+            cwd=frontend_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            universal_newlines=True
+        )
+        
+        # Wait for server to start and look for success indicators
+        start_time = time.time()
+        server_started = False
+        
+        while time.time() - start_time < 45:  # 45 second timeout
+            if dev_process.poll() is not None:
+                # Process ended unexpectedly
+                output = dev_process.stdout.read() if dev_process.stdout else ""
+                click.echo(f"Development server failed to start. Output: {output}")
+                return None
+            
+            # Try to connect to the server
+            try:
+                import requests
+                response = requests.get("http://localhost:5173", timeout=1)
+                if response.status_code == 200:
+                    server_started = True
+                    break
+            except:
+                pass
+            
+            time.sleep(1)
+        
+        if not server_started:
+            click.echo("Timeout waiting for React server to start.")
+            dev_process.terminate()
+            return None
+        
+        click.echo("✅ React development server started successfully!")
+        return dev_process
+        
+    except Exception as e:
+        logger.error(f"Failed to start React frontend: {e}")
+        click.echo(f"❌ Error starting React frontend: {e}")
+        return None
+
+
 @cli.command()
-@click.option('--lazy', is_flag=True, help='Run all operations automatically: collect, build, analyze, visualize, and open in Chrome')
+@click.option('--lazy', is_flag=True, help='Run all operations automatically: collect, build, analyze, visualize, and open in React Dashboard')
 @click.option('--projects', '-p', multiple=True, help='Project IDs to scan (defaults to current project)')
 @click.option('--open-browser', is_flag=True, default=True, help='Open visualization in browser after completion')
+@click.option('--use-old-dashboard', is_flag=True, help='Use the old HTML dashboard instead of React')
 @click.pass_obj
-def run(config, lazy, projects, open_browser):
+def run(config, lazy, projects, open_browser, use_old_dashboard):
     """Run EscaGCP operations - use --lazy for automatic execution"""
     if lazy:
         import subprocess
@@ -913,49 +1127,108 @@ def run(config, lazy, projects, open_browser):
             click.echo("\nStep 3/4: Analyzing graph for attack paths...")
             ctx.invoke(analyze, graph='graph/escagcp_graph_*.json', output='findings/', format='json')
             
-            # Step 4: Create visualization
-            click.echo("\nStep 4/4: Creating visualization...")
-            ctx.invoke(visualize, graph='graph/escagcp_graph_*.json', output='visualizations/', viz_type='attack-paths', format='html')
+            # Find latest files
+            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
+            analysis_files = list(Path('findings').glob('escagcp_analysis_*.json'))
             
-            # Find the latest visualization file
-            viz_files = list(Path('visualizations').glob('escagcp_*.html'))
-            if viz_files:
-                latest_viz = max(viz_files, key=lambda f: f.stat().st_mtime)
-                click.echo(f"\n✅ All operations completed successfully!")
-                click.echo(f"Visualization created: {latest_viz}")
+            if not graph_files or not analysis_files:
+                click.echo("❌ Could not find required data files.")
+                sys.exit(1)
+            
+            latest_graph = max(graph_files, key=lambda f: f.stat().st_mtime)
+            latest_analysis = max(analysis_files, key=lambda f: f.stat().st_mtime)
+            
+            # Step 4: Choose visualization method
+            if use_old_dashboard:
+                click.echo("\nStep 4/4: Creating HTML visualization...")
+                ctx.invoke(visualize, graph=str(latest_graph), output='visualizations/', viz_type='attack-paths', format='html')
                 
-                # Open in browser if requested
-                if open_browser:
-                    click.echo("Opening visualization in browser...")
+                # Find and open the HTML visualization
+                viz_files = list(Path('visualizations').glob('escagcp_*.html'))
+                if viz_files:
+                    latest_viz = max(viz_files, key=lambda f: f.stat().st_mtime)
+                    click.echo(f"✅ HTML visualization created: {latest_viz}")
                     
-                    # Get absolute path
-                    abs_path = latest_viz.absolute()
-                    file_url = f"file://{abs_path}"
+                    if open_browser:
+                        abs_path = latest_viz.absolute()
+                        file_url = f"file://{abs_path}"
+                        webbrowser.open(file_url)
+                else:
+                    click.echo("Warning: No HTML visualization file found.")
+            
+            else:
+                click.echo("\nStep 4/4: Preparing React Dashboard...")
+                
+                # Save data for React frontend
+                success = _save_data_for_react_frontend(str(latest_graph), str(latest_analysis))
+                if not success:
+                    click.echo("❌ Failed to prepare React dashboard. Falling back to HTML visualization.")
+                    ctx.invoke(visualize, graph=str(latest_graph), output='visualizations/', viz_type='attack-paths', format='html')
+                    sys.exit(1)
+                
+                # Start React development server
+                dev_process = _start_react_frontend()
+                if dev_process is None:
+                    click.echo("❌ Failed to start React dashboard. Falling back to HTML visualization.")
+                    ctx.invoke(visualize, graph=str(latest_graph), output='visualizations/', viz_type='attack-paths', format='html')
+                    sys.exit(1)
+                
+                click.echo(f"✅ All operations completed successfully!")
+                click.echo(f"🚀 React Dashboard is starting...")
+                
+                # Open React app in browser
+                if open_browser:
+                    click.echo("Opening React Dashboard in browser...")
+                    
+                    # Wait a moment for server to fully start (only if we started a new process)
+                    if dev_process != "already_running":
+                        import time
+                        time.sleep(5)
+                    
+                    react_url = "http://localhost:5173"
                     
                     # Try to open in Chrome specifically
                     system = platform.system()
                     try:
                         if system == "Darwin":  # macOS
-                            subprocess.run(['open', '-a', 'Google Chrome', file_url], check=True)
+                            subprocess.run(['open', '-a', 'Google Chrome', react_url], check=True)
                         elif system == "Linux":
-                            subprocess.run(['google-chrome', file_url], check=True)
+                            subprocess.run(['google-chrome', react_url], check=True)
                         elif system == "Windows":
-                            # Try Chrome first, fall back to default browser
                             chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
                             if Path(chrome_path).exists():
-                                subprocess.run([chrome_path, file_url], check=True)
+                                subprocess.run([chrome_path, react_url], check=True)
                             else:
-                                webbrowser.open(file_url)
+                                webbrowser.open(react_url)
                         else:
-                            # Fallback to default browser
-                            webbrowser.open(file_url)
+                            webbrowser.open(react_url)
                     except Exception as e:
-                        # If Chrome fails, use default browser
-                        click.echo(f"Could not open Chrome specifically, using default browser...")
-                        webbrowser.open(file_url)
-            else:
-                click.echo("Warning: No visualization file found.")
+                        click.echo(f"Could not open Chrome, using default browser...")
+                        webbrowser.open(react_url)
                 
+                click.echo(f"\n🌐 React Dashboard URL: http://localhost:5173")
+                click.echo(f"📊 Live data from: {len(projects)} project(s)")
+                click.echo(f"⚡ Interactive features available!")
+                
+                # Only wait for process if we started a new one
+                if dev_process != "already_running":
+                    click.echo(f"\n💡 Press Ctrl+C to stop the development server")
+                    
+                    # Keep the process running
+                    try:
+                        dev_process.wait()
+                    except KeyboardInterrupt:
+                        click.echo("\n🛑 Stopping React development server...")
+                        dev_process.terminate()
+                        try:
+                            dev_process.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            dev_process.kill()
+                        click.echo("✅ Development server stopped.")
+                else:
+                    click.echo(f"\n💡 React server is already running. Use Ctrl+C in the server terminal to stop it.")
+                    click.echo("✅ Dashboard is ready!")
+            
         except Exception as e:
             logger.error(f"Lazy execution failed: {e}")
             click.echo(f"\n❌ Error during execution: {e}")
@@ -963,106 +1236,17 @@ def run(config, lazy, projects, open_browser):
     else:
         # Show help for manual execution
         click.echo("GCPHound - Run operations manually or use --lazy for automatic execution")
+        click.echo("\n🔥 NEW: React Dashboard Integration!")
+        click.echo("   Use --lazy to automatically start the modern React dashboard")
+        click.echo("   Add --use-old-dashboard to use the legacy HTML visualization")
         click.echo("\nManual execution steps:")
         click.echo("1. gcphound collect --projects $(gcloud config get-value project)")
         click.echo("2. gcphound build-graph --input data/ --output graph/")
         click.echo("3. gcphound analyze --graph graph/escagcp_graph_*.json --output findings/")
         click.echo("4. gcphound visualize --graph graph/escagcp_graph_*.json --output visualizations/")
-        click.echo("\nOr simply run: gcphound run --lazy")
-
-
-@cli.command()
-@click.option('--graph', '-g', help='Graph file path or pattern (e.g., graph/*.json)')
-@click.option('--output', '-o', default='report.html', help='Output HTML file')
-@click.option('--title', '-t', default='EscaGCP Security Report', help='Report title')
-@click.pass_obj
-def export(config, graph, output, title):
-    """Export a standalone HTML report that can be shared"""
-    try:
-        # Handle graph file selection
-        if graph:
-            # If a specific file is provided
-            graph_path = Path(graph)
-            if graph_path.exists() and graph_path.is_file():
-                graph_file = graph_path
-            else:
-                # Try to interpret as a pattern
-                if '*' in graph:
-                    # It's a pattern
-                    pattern = graph
-                else:
-                    # Maybe it's a directory
-                    pattern = str(Path(graph) / 'escagcp_graph_*.json')
-                
-                graph_files = list(Path('.').glob(pattern))
-                if not graph_files:
-                    click.echo(f"No graph files found matching pattern: {pattern}")
-                    sys.exit(1)
-                
-                # Use the latest file
-                graph_file = max(graph_files, key=lambda f: f.stat().st_mtime)
-                click.echo(f"Using latest graph file: {graph_file}")
-        else:
-            # No graph specified, look in default location
-            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
-            if not graph_files:
-                click.echo("No graph files found. Run 'escagcp build-graph' first.")
-                sys.exit(1)
-            
-            # Use the latest file
-            graph_file = max(graph_files, key=lambda f: f.stat().st_mtime)
-            click.echo(f"Using latest graph file: {graph_file}")
-        
-        # Load graph
-        with open(graph_file, 'r') as f:
-            graph_data = json.load(f)
-        
-        # Rebuild graph
-        builder = GraphBuilder(config)
-        nx_graph = builder.graph
-        
-        for node_data in graph_data['nodes']:
-            nx_graph.add_node(node_data['id'], **node_data)
-        
-        for edge_data in graph_data['edges']:
-            # Combine type with properties
-            edge_attrs = edge_data.get('properties', {}).copy()
-            edge_attrs['type'] = edge_data.get('type')
-            
-            nx_graph.add_edge(
-                edge_data['source'],
-                edge_data['target'],
-                **edge_attrs
-            )
-        
-        # Create visualizer
-        visualizer = HTMLVisualizer(nx_graph, config)
-        
-        # Generate standalone report
-        click.echo("Generating standalone report...")
-        visualizer.create_standalone_report(output)
-        
-        # Get file size
-        import os
-        file_size = os.path.getsize(output) / (1024 * 1024)  # MB
-        
-        click.echo(f"\n✅ Standalone report created successfully!")
-        click.echo(f"📄 File: {output}")
-        click.echo(f"📊 Size: {file_size:.2f} MB")
-        click.echo(f"\nThis report is completely self-contained and can be:")
-        click.echo("  • Opened on any computer without internet")
-        click.echo("  • Shared via email or file transfer")
-        click.echo("  • Viewed in any modern web browser")
-        click.echo("\nThe report includes:")
-        click.echo("  • Interactive graph visualization")
-        click.echo("  • All nodes and edges data")
-        click.echo("  • Attack path analysis")
-        click.echo("  • Risk scoring")
-        click.echo("  • Dangerous roles information")
-        
-    except Exception as e:
-        logger.error(f"Export failed: {e}")
-        sys.exit(1)
+        click.echo("\nQuick start:")
+        click.echo("   gcphound run --lazy              # Use new React dashboard")
+        click.echo("   gcphound run --lazy --use-old-dashboard   # Use legacy HTML")
 
 
 @cli.command()
