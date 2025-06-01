@@ -134,12 +134,12 @@ dmypy.json
 Thumbs.db
 
 # EscaGCP specific
-data/
-graph/
-findings/
-visualizations/
-neo4j_import/
-escagcp-results/
+/data/
+/graph/
+/findings/
+/visualizations/
+/neo4j_import/
+/escagcp-results/
 *.graphml
 *.gexf
 
