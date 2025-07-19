@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# GCPHound Frontend Test Runner
+# EscaGCP Frontend Test Runner
 # This script manages the server lifecycle and runs tests systematically
 
 set -e
 
-echo "🚀 GCPHound Frontend Test Runner"
+echo "🚀 EscaGCP Frontend Test Runner"
 echo "================================="
 
 # Function to cleanup background processes

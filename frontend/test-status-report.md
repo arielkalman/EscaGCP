@@ -1,4 +1,4 @@
-# GCPHound Frontend Test Status Report
+# EscaGCP Frontend Test Status Report
 
 ## 📊 Executive Summary
 

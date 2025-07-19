@@ -33,7 +33,7 @@ export function ThemeSettings() {
         <CardHeader>
           <CardTitle>Theme</CardTitle>
           <CardDescription>
-            Choose how GCPHound looks and feels
+            Choose how EscaGCP looks and feels
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

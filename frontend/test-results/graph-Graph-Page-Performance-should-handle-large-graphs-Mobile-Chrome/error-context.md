@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> Performance >> should handle large graphs
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:371:5
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:371:5
 
 # Error details
 
@@ -61,17 +61,17 @@ Call log:
   - retrying click action
     - waiting 500ms
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:425:24
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:425:24
 ```
 
 # Page snapshot
 
 ```yaml
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

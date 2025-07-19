@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock, call
 from googleapiclient.errors import HttpError
 
-from gcphound.collectors.hierarchy import HierarchyCollector
+from escagcp.collectors.hierarchy import HierarchyCollector
 
 
 class TestHierarchyCollector:
@@ -64,7 +64,7 @@ class TestHierarchyCollector:
         assert len(result['organizations']) == 0
         assert len(result['folders']) == 0
     
-    @patch('gcphound.collectors.base.BaseCollector._execute_request')
+    @patch('escagcp.collectors.base.BaseCollector._execute_request')
     def test_collect_with_folders(self, mock_execute, collector, mock_service):
         """Test collecting specific folders"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -92,7 +92,7 @@ class TestHierarchyCollector:
         assert result['folders']['123']['displayName'] == 'Test Folder'
         assert result['folders']['123']['parent'] == 'organizations/456'
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_all_projects(self, mock_paginate, collector, mock_service):
         """Test discovering all accessible projects"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -117,7 +117,7 @@ class TestHierarchyCollector:
         assert 'project-3' in result['projects']
         assert 'project-4' not in result['projects']  # Deleted project skipped
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_with_max_projects_limit(self, mock_paginate, collector, mock_service):
         """Test project collection with max limit"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -138,8 +138,8 @@ class TestHierarchyCollector:
         # Should only collect max_projects
         assert len(result['projects']) == 2
     
-    @patch('gcphound.collectors.base.BaseCollector._execute_request')
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._execute_request')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_handles_permission_errors(self, mock_paginate, mock_execute, collector, mock_service):
         """Test handling permission errors gracefully"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -250,7 +250,7 @@ class TestHierarchyCollector:
         ancestors = collector.get_project_ancestors('unknown-project')
         assert ancestors == []
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_all_folders_recursive(self, mock_paginate, collector, mock_service):
         """Test recursive folder collection"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -297,7 +297,7 @@ class TestHierarchyCollector:
         assert 'folder2' in collector._collected_data['folders']
         assert collector._collected_data['folders']['folder2']['parent'] == 'folders/folder1'
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_handles_api_errors(self, mock_paginate, collector, mock_service):
         """Test handling various API errors"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -316,8 +316,8 @@ class TestHierarchyCollector:
         error_str = str(collector._metadata['errors'][0])
         assert '500' in error_str or 'Error' in error_str or 'HttpError' in error_str
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
-    @patch('gcphound.collectors.hierarchy.ProgressLogger')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.hierarchy.ProgressLogger')
     def test_progress_logging(self, mock_progress, mock_paginate, collector, mock_service):
         """Test that progress logging is used"""
         collector.auth_manager.build_service.return_value = mock_service

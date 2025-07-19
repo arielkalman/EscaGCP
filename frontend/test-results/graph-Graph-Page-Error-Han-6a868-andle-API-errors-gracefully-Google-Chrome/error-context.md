@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> Error Handling >> should handle API errors gracefully
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:446:5
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:446:5
 
 # Error details
 
@@ -15,17 +15,17 @@ Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for getByText(/error|failed/i)
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:452:53
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:452:53
 ```
 
 # Page snapshot
 
 ```yaml
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

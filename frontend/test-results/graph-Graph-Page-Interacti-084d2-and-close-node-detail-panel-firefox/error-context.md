@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> Interactive Panels >> should open and close node detail panel
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:246:5
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:246:5
 
 # Error details
 
@@ -15,7 +15,7 @@ Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for getByText('attacker@external.com')
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:290:63
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:290:63
 ```
 
 # Page snapshot

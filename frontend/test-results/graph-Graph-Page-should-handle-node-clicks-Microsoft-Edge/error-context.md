@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> should handle node clicks
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:149:3
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:149:3
 
 # Error details
 
@@ -15,17 +15,17 @@ Call log:
   - expect.toBeVisible with timeout 5000ms
   - waiting for getByTestId('node-detail-panel')
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:158:57
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:158:57
 ```
 
 # Page snapshot
 
 ```yaml
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

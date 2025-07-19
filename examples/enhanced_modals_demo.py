@@ -14,8 +14,8 @@ import random
 import networkx as nx
 from datetime import datetime
 from pathlib import Path
-from gcphound.visualizers.html import HTMLVisualizer
-from gcphound.utils import Config
+from escagcp.visualizers.html import HTMLVisualizer
+from escagcp.utils import Config
 
 
 def create_comprehensive_graph():

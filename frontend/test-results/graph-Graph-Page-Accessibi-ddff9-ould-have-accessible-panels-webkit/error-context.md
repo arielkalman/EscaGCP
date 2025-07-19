@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page Accessibility @accessibility >> should have accessible panels
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:533:3
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:533:3
 
 # Error details
 
@@ -15,17 +15,17 @@ Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for getByTestId('node-detail-panel')
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:549:57
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:549:57
 ```
 
 # Page snapshot
 
 ```yaml
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

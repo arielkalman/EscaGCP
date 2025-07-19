@@ -1,4 +1,4 @@
-# <img src="gcphound/static/images/escagcp-logo-vector-no-bg.png" alt="EscaGCP Logo" height="40" style="vertical-align: middle;"> EscaGCP
+# <img src="escagcp/static/images/escagcp-logo-vector-no-bg.png" alt="EscaGCP Logo" height="40" style="vertical-align: middle;"> EscaGCP
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![GCP](https://img.shields.io/badge/GCP-Security-orange.svg)](https://cloud.google.com/)

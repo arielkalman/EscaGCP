@@ -159,8 +159,8 @@ key.json
 
 # Config files with sensitive data
 config.yaml
-!gcphound/config/default.yaml
-!gcphound/config/permissions.yaml
+!escagcp/config/default.yaml
+!escagcp/config/permissions.yaml
 
 # Temporary files
 *.tmp

@@ -4,7 +4,7 @@ import pytest
 from click.testing import CliRunner
 from pathlib import Path
 from unittest.mock import patch, Mock
-from gcphound.cli import cli
+from escagcp.cli import cli
 
 
 class TestCleanupCommand:
@@ -130,7 +130,7 @@ class TestCleanupCommand:
         mock_rmtree.side_effect = PermissionError("Permission denied")
         
         runner = CliRunner()
-        with patch('gcphound.utils.logger.get_logger') as mock_logger:
+        with patch('escagcp.utils.logger.get_logger') as mock_logger:
             result = runner.invoke(cli, ['cleanup', '--force'])
             
             assert result.exit_code == 0

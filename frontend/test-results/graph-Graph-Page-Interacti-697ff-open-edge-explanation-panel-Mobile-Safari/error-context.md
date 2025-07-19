@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> Interactive Panels >> should open edge explanation panel
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:343:5
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:343:5
 
 # Error details
 
@@ -15,7 +15,7 @@ Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for getByText(/iam.serviceAccounts.getAccessToken/i)
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:366:75
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:366:75
 ```
 
 # Page snapshot

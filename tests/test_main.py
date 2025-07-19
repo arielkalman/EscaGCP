@@ -8,11 +8,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import networkx as nx
 
-from gcphound.utils import Config, AuthManager
-from gcphound.collectors import CollectionOrchestrator
-from gcphound.graph import GraphBuilder, GraphQuery, GraphExporter
-from gcphound.analyzers import PathAnalyzer
-from gcphound.visualizers import HTMLVisualizer, GraphMLVisualizer
+from escagcp.utils import Config, AuthManager
+from escagcp.collectors import CollectionOrchestrator
+from escagcp.graph import GraphBuilder, GraphQuery, GraphExporter
+from escagcp.analyzers import PathAnalyzer
+from escagcp.visualizers import HTMLVisualizer, GraphMLVisualizer
 
 
 class TestFullWorkflow:
@@ -180,7 +180,7 @@ class TestFullWorkflow:
     def test_iam_simulation(self, mock_config, sample_graph, sample_nodes):
         """Test IAM change simulation"""
         # Add the user node that will be used in simulation
-        from gcphound.graph.models import Node, NodeType
+        from escagcp.graph.models import Node, NodeType
         eve_node = Node(
             id='user:eve@example.com',
             type=NodeType.USER,

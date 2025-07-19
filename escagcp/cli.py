@@ -14,7 +14,7 @@ import click
 import networkx as nx
 
 from .utils.logger import get_logger
-from .utils.config import load_config
+from .utils.config import Config, load_config
 from .utils.auth import AuthManager
 from .collectors.orchestrator import CollectionOrchestrator
 from .graph.builder import GraphBuilder
@@ -989,9 +989,9 @@ def _start_react_frontend() -> Optional[subprocess.Popen]:
         import time
         import os
         
-        # Get the project root directory (where both gcphound and frontend directories are)
+        # Get the project root directory (where both escagcp and frontend directories are)
         current_file = Path(__file__).resolve()
-        project_root = current_file.parent.parent  # Go up from gcphound/cli.py to project root
+        project_root = current_file.parent.parent  # Go up from escagcp/cli.py to project root
         frontend_dir = project_root / "frontend"
         
         if not frontend_dir.exists():
@@ -1235,18 +1235,18 @@ def run(config, lazy, projects, open_browser, use_old_dashboard):
             sys.exit(1)
     else:
         # Show help for manual execution
-        click.echo("GCPHound - Run operations manually or use --lazy for automatic execution")
+        click.echo("EscaGCP - Run operations manually or use --lazy for automatic execution")
         click.echo("\n🔥 NEW: React Dashboard Integration!")
         click.echo("   Use --lazy to automatically start the modern React dashboard")
         click.echo("   Add --use-old-dashboard to use the legacy HTML visualization")
         click.echo("\nManual execution steps:")
-        click.echo("1. gcphound collect --projects $(gcloud config get-value project)")
-        click.echo("2. gcphound build-graph --input data/ --output graph/")
-        click.echo("3. gcphound analyze --graph graph/escagcp_graph_*.json --output findings/")
-        click.echo("4. gcphound visualize --graph graph/escagcp_graph_*.json --output visualizations/")
+        click.echo("1. escagcp collect --projects $(gcloud config get-value project)")
+        click.echo("2. escagcp build-graph --input data/ --output graph/")
+        click.echo("3. escagcp analyze --graph graph/escagcp_graph_*.json --output findings/")
+        click.echo("4. escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/")
         click.echo("\nQuick start:")
-        click.echo("   gcphound run --lazy              # Use new React dashboard")
-        click.echo("   gcphound run --lazy --use-old-dashboard   # Use legacy HTML")
+        click.echo("   escagcp run --lazy              # Use new React dashboard")
+        click.echo("   escagcp run --lazy --use-old-dashboard   # Use legacy HTML")
 
 
 @cli.command()

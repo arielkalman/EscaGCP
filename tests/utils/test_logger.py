@@ -5,7 +5,7 @@ Tests for logger utility
 import pytest
 import logging
 from unittest.mock import patch, Mock, MagicMock
-from gcphound.utils.logger import get_logger, ProgressLogger
+from escagcp.utils.logger import get_logger, ProgressLogger
 
 
 class TestGetLogger:
@@ -19,14 +19,14 @@ class TestGetLogger:
     
     def test_get_logger_with_rich_handler(self):
         """Test that logger has RichHandler when available"""
-        with patch('gcphound.utils.logger.RichHandler') as mock_rich_handler:
+        with patch('escagcp.utils.logger.RichHandler') as mock_rich_handler:
             logger = get_logger("test_rich")
             # Check that RichHandler was used
             assert mock_rich_handler.called
     
     def test_get_logger_fallback_to_stream_handler(self):
         """Test fallback to StreamHandler when RichHandler not available"""
-        with patch('gcphound.utils.logger.RICH_AVAILABLE', False):
+        with patch('escagcp.utils.logger.RICH_AVAILABLE', False):
             logger = get_logger("test_fallback")
             # Should have at least one handler
             assert len(logger.handlers) > 0
@@ -63,7 +63,7 @@ class TestProgressLogger:
         assert progress.total is None
         assert progress.description == "No total"
     
-    @patch('gcphound.utils.logger.Progress')
+    @patch('escagcp.utils.logger.Progress')
     def test_progress_logger_context_manager(self, mock_progress_class):
         """Test ProgressLogger as context manager"""
         # Create a mock progress instance with context manager support
@@ -80,7 +80,7 @@ class TestProgressLogger:
         mock_progress.__enter__.assert_called_once()
         mock_progress.__exit__.assert_called_once()
     
-    @patch('gcphound.utils.logger.Progress')
+    @patch('escagcp.utils.logger.Progress')
     def test_progress_logger_update(self, mock_progress_class):
         """Test updating progress"""
         # Create a mock progress instance with context manager support
@@ -99,7 +99,7 @@ class TestProgressLogger:
             progress.update(5)
             mock_progress.update.assert_called_with(mock_task, advance=5)
     
-    @patch('gcphound.utils.logger.Progress')
+    @patch('escagcp.utils.logger.Progress')
     def test_progress_logger_update_without_total(self, mock_progress_class):
         """Test updating progress without total"""
         # Create a mock progress instance with context manager support
@@ -115,9 +115,9 @@ class TestProgressLogger:
             progress.update(1)
             mock_progress.update.assert_called_with(mock_task, advance=1)
     
-    @patch('gcphound.utils.logger.RICH_AVAILABLE', False)
-    @patch('gcphound.utils.logger.TQDM_AVAILABLE', True)
-    @patch('gcphound.utils.logger.tqdm')
+    @patch('escagcp.utils.logger.RICH_AVAILABLE', False)
+    @patch('escagcp.utils.logger.TQDM_AVAILABLE', True)
+    @patch('escagcp.utils.logger.tqdm')
     def test_progress_logger_fallback_to_tqdm(self, mock_tqdm):
         """Test fallback to tqdm when rich is not available"""
         # Create a mock tqdm instance with context manager support
@@ -133,8 +133,8 @@ class TestProgressLogger:
         mock_tqdm.assert_called_once_with(total=100, desc="Test")
         mock_tqdm_instance.close.assert_called_once()
     
-    @patch('gcphound.utils.logger.RICH_AVAILABLE', False)
-    @patch('gcphound.utils.logger.TQDM_AVAILABLE', False)
+    @patch('escagcp.utils.logger.RICH_AVAILABLE', False)
+    @patch('escagcp.utils.logger.TQDM_AVAILABLE', False)
     def test_progress_logger_no_progress_library(self):
         """Test when no progress library is available"""
         with ProgressLogger(total=100, description="Test") as progress:
@@ -142,7 +142,7 @@ class TestProgressLogger:
             progress.update(10)
             assert progress._progress is None
     
-    @patch('gcphound.utils.logger.Progress')
+    @patch('escagcp.utils.logger.Progress')
     def test_progress_logger_with_exception(self, mock_progress_class):
         """Test progress logger handles exceptions properly"""
         # Create a mock progress instance with context manager support
@@ -162,11 +162,11 @@ class TestProgressLogger:
     
     def test_progress_logger_custom_columns(self):
         """Test progress logger with custom columns"""
-        with patch('gcphound.utils.logger.Progress') as mock_progress_class:
-            with patch('gcphound.utils.logger.SpinnerColumn') as mock_spinner:
-                with patch('gcphound.utils.logger.TextColumn') as mock_text:
-                    with patch('gcphound.utils.logger.BarColumn') as mock_bar:
-                        with patch('gcphound.utils.logger.TimeRemainingColumn') as mock_time:
+        with patch('escagcp.utils.logger.Progress') as mock_progress_class:
+            with patch('escagcp.utils.logger.SpinnerColumn') as mock_spinner:
+                with patch('escagcp.utils.logger.TextColumn') as mock_text:
+                    with patch('escagcp.utils.logger.BarColumn') as mock_bar:
+                        with patch('escagcp.utils.logger.TimeRemainingColumn') as mock_time:
                             with ProgressLogger(total=100, description="Test"):
                                 # Check that columns were created
                                 mock_spinner.assert_called_once()

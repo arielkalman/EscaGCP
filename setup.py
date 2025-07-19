@@ -8,7 +8,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="gcphound",
+    name="escagcp",
     version="0.1.0",
     author="Ariel Kalman",
     author_email="arielkalman5799@gmail.com",
@@ -49,11 +49,11 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "gcphound=gcphound.cli:main",
+            "escagcp=escagcp.cli:main",
         ],
     },
     include_package_data=True,
     package_data={
-        "gcphound": ["config/*.yaml"],
+        "escagcp": ["config/*.yaml"],
     },
 ) 

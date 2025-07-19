@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from click.testing import CliRunner
-from gcphound.cli import cli
+from escagcp.cli import cli
 from pathlib import Path
 
 
@@ -21,12 +21,12 @@ class TestLazyMode:
     def test_run_without_lazy_shows_help(self):
         """Test that run without --lazy shows help"""
         runner = CliRunner()
-        with patch('gcphound.cli.Config.from_yaml', return_value=Mock()):
+        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
             result = runner.invoke(cli, ['run'])
             assert result.exit_code == 0
             assert 'Manual execution steps:' in result.output
-            assert 'gcphound collect' in result.output
-            assert 'gcphound run --lazy' in result.output
+            assert 'escagcp collect' in result.output
+            assert 'escagcp run --lazy' in result.output
     
     @patch('subprocess.run')
     @patch('click.get_current_context')
@@ -56,7 +56,7 @@ class TestLazyMode:
         mock_glob.return_value = [mock_viz_file]
         
         runner = CliRunner()
-        with patch('gcphound.cli.Config.from_yaml', return_value=Mock()):
+        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
             result = runner.invoke(cli, ['run', '--lazy'])
             
             # Check that gcloud was called to get current project
@@ -90,7 +90,7 @@ class TestLazyMode:
         mock_glob.return_value = [mock_viz_file]
         
         runner = CliRunner()
-        with patch('gcphound.cli.Config.from_yaml', return_value=Mock()):
+        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
             result = runner.invoke(cli, ['run', '--lazy', '-p', 'project1', '-p', 'project2'])
             
             # Check that all commands were invoked with the right projects
@@ -112,7 +112,7 @@ class TestLazyMode:
         )
         
         runner = CliRunner()
-        with patch('gcphound.cli.Config.from_yaml', return_value=Mock()):
+        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
             result = runner.invoke(cli, ['run', '--lazy'])
             
             assert result.exit_code == 1
@@ -141,7 +141,7 @@ class TestLazyMode:
         mock_glob.return_value = [mock_viz_file]
         
         runner = CliRunner()
-        with patch('gcphound.cli.Config.from_yaml', return_value=Mock()):
+        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
             result = runner.invoke(cli, ['run', '--lazy'])
             
             # Check that open command was called for macOS
@@ -162,7 +162,7 @@ class TestLazyMode:
         mock_glob.return_value = [mock_viz_file]
         
         runner = CliRunner()
-        with patch('gcphound.cli.Config.from_yaml', return_value=Mock()):
+        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
             with patch('webbrowser.open') as mock_browser:
                 result = runner.invoke(cli, ['run', '--lazy', '-p', 'test-project', '--no-open-browser'])
                 

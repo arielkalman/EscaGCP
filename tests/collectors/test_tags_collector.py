@@ -6,8 +6,8 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock, call
 from googleapiclient.errors import HttpError
 
-from gcphound.collectors.tags_collector import TagsCollector
-from gcphound.collectors.base import BaseCollector
+from escagcp.collectors.tags_collector import TagsCollector
+from escagcp.collectors.base import BaseCollector
 
 
 class TestTagsCollector:
@@ -37,7 +37,7 @@ class TestTagsCollector:
         assert items[0]['name'] == 'tagKeys/1'
         assert items[1]['name'] == 'tagKeys/2'
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_tag_keys_simple(self, mock_paginate, collector):
         """Test _collect_tag_keys method directly"""
         # Mock the paginate_list to return our tag keys directly
@@ -89,9 +89,9 @@ class TestTagsCollector:
         
         return service
     
-    @patch('gcphound.collectors.tags_collector.TagsCollector._collect_tag_values')
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
-    @patch('gcphound.collectors.tags_collector.TagsCollector._analyze_tag_usage_in_conditions')
+    @patch('escagcp.collectors.tags_collector.TagsCollector._collect_tag_values')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.tags_collector.TagsCollector._analyze_tag_usage_in_conditions')
     def test_collect_with_organization(self, mock_analyze, mock_paginate, mock_collect_tag_values, collector):
         """Test collecting tags for an organization"""
         # Mock build_service
@@ -136,7 +136,7 @@ class TestTagsCollector:
         assert result['tag_values']['tagValues/789012']['shortName'] == 'production'
         assert result['tag_values']['tagValues/789012']['parent'] == 'tagKeys/123456'
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_tag_bindings_for_projects(self, mock_paginate, collector, mock_service):
         """Test collecting tag bindings for projects"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -285,8 +285,8 @@ class TestTagsCollector:
         assert len(result['tag_keys']) == 0
         assert len(collector._metadata['errors']) > 0
     
-    @patch('gcphound.collectors.tags_collector.TagsCollector._collect_tag_values')
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.tags_collector.TagsCollector._collect_tag_values')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_with_pagination(self, mock_paginate, mock_collect_tag_values, collector, mock_service):
         """Test collecting with pagination"""
         collector.auth_manager.build_service.return_value = mock_service
@@ -322,7 +322,7 @@ class TestTagsCollector:
         assert 'tagKeys/0' in collector._collected_data['tag_keys']
         assert 'tagKeys/24' in collector._collected_data['tag_keys']
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_empty_collection(self, mock_paginate, collector):
         """Test collection when no tags exist"""
         # Mock build_service

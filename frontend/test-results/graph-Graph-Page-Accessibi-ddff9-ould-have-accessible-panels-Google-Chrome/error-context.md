@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page Accessibility @accessibility >> should have accessible panels
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:533:3
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:533:3
 
 # Error details
 
@@ -14,7 +14,7 @@ Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for getByRole('button', { name: /close/i })
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:557:31
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:557:31
 ```
 
 # Page snapshot

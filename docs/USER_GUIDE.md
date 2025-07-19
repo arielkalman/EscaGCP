@@ -383,7 +383,7 @@ output:
 ### Python API Usage
 
 ```python
-from gcphound import (
+from escagcp import (
     Config, AuthManager, CollectionOrchestrator,
     GraphBuilder, PathAnalyzer, HTMLVisualizer
 )
@@ -448,7 +448,7 @@ RETURN path
 ```python
 # Send findings to SIEM
 import requests
-from gcphound import PathAnalyzer
+from escagcp import PathAnalyzer
 
 # Analyze
 analyzer = PathAnalyzer(graph, config)

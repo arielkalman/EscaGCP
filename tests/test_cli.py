@@ -6,7 +6,7 @@ from click.testing import CliRunner
 import json
 import os
 from pathlib import Path
-from gcphound.cli import cli, main
+from escagcp.cli import cli, main
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def runner():
 @pytest.fixture
 def mock_config():
     """Mock configuration"""
-    with patch('gcphound.cli.Config') as mock:
+    with patch('escagcp.cli.Config') as mock:
         config_instance = Mock()
         config_instance.to_dict.return_value = {'test': 'config'}
         mock.return_value = config_instance
@@ -28,7 +28,7 @@ def mock_config():
 @pytest.fixture
 def mock_auth_manager():
     """Mock auth manager"""
-    with patch('gcphound.cli.AuthManager') as mock:
+    with patch('escagcp.cli.AuthManager') as mock:
         auth_instance = Mock()
         auth_instance.project_id = 'test-project'
         mock.return_value = auth_instance
@@ -47,7 +47,7 @@ class TestCLI:
         
 
                          
-    @patch('gcphound.cli.CollectionOrchestrator')
+    @patch('escagcp.cli.CollectionOrchestrator')
     def test_collect_command_basic(self, mock_orchestrator, runner, mock_config, mock_auth_manager):
         """Test basic collect command"""
         # Mock orchestrator
@@ -79,7 +79,7 @@ class TestCLI:
             assert call_args[1]['project_ids'] == ['test-project']
             assert call_args[1]['output_dir'] == 'data/'
             
-    @patch('gcphound.cli.CollectionOrchestrator')
+    @patch('escagcp.cli.CollectionOrchestrator')
     def test_collect_command_with_organization(self, mock_orchestrator, runner, mock_config, mock_auth_manager):
         """Test collect command with organization"""
         # Mock orchestrator
@@ -106,8 +106,8 @@ class TestCLI:
             call_args = orchestrator_instance.collect_all.call_args
             assert call_args[1]['organization_id'] == '123456789'
             
-    @patch('gcphound.cli.GraphExporter')
-    @patch('gcphound.cli.GraphBuilder')
+    @patch('escagcp.cli.GraphExporter')
+    @patch('escagcp.cli.GraphBuilder')
     def test_build_graph_command(self, mock_builder, mock_exporter, runner, mock_config, mock_auth_manager):
         """Test build-graph command"""
         # Mock graph builder
@@ -142,8 +142,8 @@ class TestCLI:
             builder_instance.build_from_collected_data.assert_called_once()
             assert 'Graph built successfully' in result.output
             
-    @patch('gcphound.cli.PathAnalyzer')
-    @patch('gcphound.cli.GraphBuilder')
+    @patch('escagcp.cli.PathAnalyzer')
+    @patch('escagcp.cli.GraphBuilder')
     def test_analyze_command(self, mock_builder, mock_analyzer, runner):
         """Test analyze command"""
         # Mock graph builder
@@ -190,9 +190,9 @@ class TestCLI:
             analyzer_instance.analyze_all_paths.assert_called_once()
             assert 'Total attack paths: 1' in result.output
             
-    @patch('gcphound.cli.HTMLVisualizer')
-    @patch('gcphound.cli.PathAnalyzer')
-    @patch('gcphound.cli.GraphBuilder')
+    @patch('escagcp.cli.HTMLVisualizer')
+    @patch('escagcp.cli.PathAnalyzer')
+    @patch('escagcp.cli.GraphBuilder')
     def test_visualize_command(self, mock_builder, mock_analyzer, mock_visualizer, runner):
         """Test visualize command"""
         # Mock graph builder
@@ -231,10 +231,10 @@ class TestCLI:
             assert result.exit_code == 0
             visualizer_instance.create_full_graph.assert_called_once()
             
-    @patch('gcphound.cli.GraphQuery')
-    @patch('gcphound.graph.models.Node')
-    @patch('gcphound.graph.models.NodeType')
-    @patch('gcphound.cli.GraphBuilder')
+    @patch('escagcp.cli.GraphQuery')
+    @patch('escagcp.graph.models.Node')
+    @patch('escagcp.graph.models.NodeType')
+    @patch('escagcp.cli.GraphBuilder')
     def test_query_command(self, mock_builder, mock_node_type, mock_node, mock_query, runner):
         """Test query command"""
         # Mock graph builder
@@ -287,10 +287,10 @@ class TestCLI:
             query_instance.find_all_paths.assert_called_once()
             assert 'Found 1 paths' in result.output
             
-    @patch('gcphound.cli.GraphQuery')
-    @patch('gcphound.graph.models.Node')
-    @patch('gcphound.graph.models.NodeType')
-    @patch('gcphound.cli.GraphBuilder')
+    @patch('escagcp.cli.GraphQuery')
+    @patch('escagcp.graph.models.Node')
+    @patch('escagcp.graph.models.NodeType')
+    @patch('escagcp.cli.GraphBuilder')
     def test_simulate_command(self, mock_builder, mock_node_type, mock_node, mock_query, runner):
         """Test simulate command"""
         # Mock graph builder
@@ -343,9 +343,9 @@ class TestCLI:
             query_instance.simulate_binding_addition.assert_called_once()
             assert 'new attack paths' in result.output.lower()
             
-    @patch('gcphound.cli.HTMLVisualizer')
-    @patch('gcphound.cli.PathAnalyzer')
-    @patch('gcphound.cli.GraphBuilder')
+    @patch('escagcp.cli.HTMLVisualizer')
+    @patch('escagcp.cli.PathAnalyzer')
+    @patch('escagcp.cli.GraphBuilder')
     def test_export_command(self, mock_builder, mock_analyzer, mock_visualizer, runner):
         """Test export command"""
         # Mock graph builder
@@ -437,10 +437,10 @@ class TestCLI:
             
     @patch('subprocess.run')
     @patch('webbrowser.open')
-    @patch('gcphound.cli.CollectionOrchestrator')
-    @patch('gcphound.cli.GraphBuilder')
-    @patch('gcphound.cli.PathAnalyzer')
-    @patch('gcphound.cli.HTMLVisualizer')
+    @patch('escagcp.cli.CollectionOrchestrator')
+    @patch('escagcp.cli.GraphBuilder')
+    @patch('escagcp.cli.PathAnalyzer')
+    @patch('escagcp.cli.HTMLVisualizer')
     def test_run_command_lazy_mode(self, mock_visualizer, mock_analyzer, mock_builder, 
                                    mock_orchestrator, mock_browser_open, mock_subprocess_run, 
                                    runner, mock_config, mock_auth_manager):
@@ -575,8 +575,8 @@ class TestCLI:
             with open('graph/escagcp_graph_20230102_120000.json', 'w') as f:
                 json.dump({'nodes': [], 'edges': []}, f)
                 
-            with patch('gcphound.cli.PathAnalyzer') as mock_analyzer:
-                with patch('gcphound.cli.GraphBuilder') as mock_builder:
+            with patch('escagcp.cli.PathAnalyzer') as mock_analyzer:
+                with patch('escagcp.cli.GraphBuilder') as mock_builder:
                     # Mock graph builder
                     builder_instance = Mock()
                     builder_instance.graph = Mock()

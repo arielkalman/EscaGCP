@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock, call
 from googleapiclient.errors import HttpError
 
-from gcphound.collectors.cloudbuild_collector import CloudBuildCollector
+from escagcp.collectors.cloudbuild_collector import CloudBuildCollector
 
 
 class TestCloudBuildCollector:
@@ -26,9 +26,9 @@ class TestCloudBuildCollector:
         }
         return services
     
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_cloud_build_data(self, mock_paginate, mock_collect_worker_pools, mock_collect_recent_builds, collector):
         """Test collecting Cloud Build data for projects"""
         # Mock build_service
@@ -91,9 +91,9 @@ class TestCloudBuildCollector:
         # The serviceAccount is nested in the build config
         assert trigger['build']['serviceAccount'] == 'projects/test-project/serviceAccounts/custom-sa@test-project.iam.gserviceaccount.com'
     
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_default_service_account_detection(self, mock_paginate, mock_collect_worker_pools, mock_collect_recent_builds, collector):
         """Test detection of default Cloud Build service account usage"""
         # Mock build_service
@@ -136,7 +136,7 @@ class TestCloudBuildCollector:
         trigger = result['triggers']['test-project/trigger-default']
         assert trigger.get('serviceAccount') is None  # No custom SA specified
     
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
     def test_collect_worker_pools(self, mock_collect_worker_pools, collector):
         """Test collecting Cloud Build worker pools"""
         # Set up test data
@@ -220,9 +220,9 @@ class TestCloudBuildCollector:
         assert 'custom' in sa_info
         assert 'custom-sa@test-project.iam.gserviceaccount.com' in sa_info['custom']
     
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_handles_api_errors(self, mock_paginate, mock_collect_worker_pools, mock_collect_recent_builds, collector):
         """Test handling API errors gracefully"""
         # Mock build_service
@@ -257,7 +257,7 @@ class TestCloudBuildCollector:
         assert len(result['triggers']) == 0
         assert len(collector._metadata['errors']) == 0  # 403 errors are ignored
     
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
     def test_recent_builds_analysis(self, mock_collect_recent_builds, collector):
         """Test analyzing recent builds for patterns"""
         # Set up test builds data
@@ -323,9 +323,9 @@ class TestCloudBuildCollector:
         assert len(service_accounts) == 3
         assert 'custom-sa@test-project.iam.gserviceaccount.com' in service_accounts
     
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_empty_cloud_build_config(self, mock_paginate, mock_collect_worker_pools, mock_collect_recent_builds, collector):
         """Test handling projects with no Cloud Build configuration"""
         # Mock build_service
@@ -358,9 +358,9 @@ class TestCloudBuildCollector:
         assert len(result['worker_pools']) == 0
         assert len(result['build_configs']) == 0
     
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_build_triggers')
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
-    @patch('gcphound.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_build_triggers')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_worker_pools')
+    @patch('escagcp.collectors.cloudbuild_collector.CloudBuildCollector._collect_recent_builds')
     def test_project_number_lookup_failure(self, mock_collect_recent_builds, mock_collect_worker_pools, mock_collect_triggers, collector):
         """Test handling project number lookup failure"""
         # Mock build_service to fail on project lookup
