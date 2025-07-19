@@ -17,12 +17,14 @@ from .utils.logger import get_logger
 from .utils.config import Config, load_config
 from .utils.auth import AuthManager
 from .collectors.orchestrator import CollectionOrchestrator
+from .collectors.logs_collector import LogsCollector
 from .graph.builder import GraphBuilder
 from .graph.exporter import GraphExporter
 from .graph.query import GraphQuery
 from .graph.models import Node, Edge, NodeType, EdgeType, AttackPath
 from .analyzers.paths import PathAnalyzer
 from .visualizers.html import HTMLVisualizer
+from .visualizers.graphml import GraphMLVisualizer
 
 
 logger = get_logger(__name__)
@@ -1250,6 +1252,87 @@ def run(config, lazy, projects, open_browser, use_old_dashboard):
 
 
 @cli.command()
+@click.option('--graph', '-g', help='Graph file path or pattern (e.g., graph/*.json)')
+@click.option('--output', '-o', default='escagcp_report.html', help='Output HTML file')
+@click.pass_obj
+def export(config, graph, output):
+    """Export a standalone HTML report with embedded visualization"""
+    try:
+        # Handle graph file selection
+        if graph:
+            # If a specific file is provided
+            graph_path = Path(graph)
+            if graph_path.exists() and graph_path.is_file():
+                graph_file = graph_path
+            else:
+                # Try to interpret as a pattern
+                if '*' in graph:
+                    # It's a pattern
+                    pattern = graph
+                else:
+                    # Maybe it's a directory
+                    pattern = str(Path(graph) / 'escagcp_graph_*.json')
+                
+                graph_files = list(Path('.').glob(pattern))
+                if not graph_files:
+                    click.echo(f"No graph files found matching pattern: {pattern}")
+                    sys.exit(1)
+                
+                # Use the latest file
+                graph_file = max(graph_files, key=lambda f: f.stat().st_mtime)
+                click.echo(f"Using latest graph file: {graph_file}")
+        else:
+            # No graph specified, look in default location
+            graph_files = list(Path('graph').glob('escagcp_graph_*.json'))
+            if not graph_files:
+                click.echo("No graph files found. Run 'escagcp build-graph' first.")
+                sys.exit(1)
+            
+            # Use the latest file
+            graph_file = max(graph_files, key=lambda f: f.stat().st_mtime)
+            click.echo(f"Using latest graph file: {graph_file}")
+        
+        # Load graph
+        with open(graph_file, 'r') as f:
+            graph_data = json.load(f)
+        
+        # Rebuild graph
+        builder = GraphBuilder(config)
+        nx_graph = builder.graph
+        
+        for node_data in graph_data['nodes']:
+            nx_graph.add_node(node_data['id'], **node_data)
+        
+        for edge_data in graph_data['edges']:
+            nx_graph.add_edge(
+                edge_data['source'],
+                edge_data['target'],
+                **edge_data.get('properties', {})
+            )
+        
+        # Run analysis
+        analyzer = PathAnalyzer(nx_graph, config)
+        analysis_results = analyzer.analyze_all_paths()
+        
+        # Create standalone report
+        visualizer = HTMLVisualizer(nx_graph, config)
+        visualizer.create_standalone_report(
+            output,
+            risk_scores=analysis_results.get('risk_scores', {}),
+            attack_paths=analysis_results.get('attack_paths', {}),
+            highlight_nodes=set(analysis_results.get('critical_nodes', []))
+        )
+        
+        # Get file size
+        file_size = os.path.getsize(output) / (1024 * 1024)  # MB
+        click.echo(f"✓ Standalone report created successfully: {output} ({file_size:.1f} MB)")
+        
+    except Exception as e:
+        logger.error(f"Export failed: {e}")
+        sys.exit(1)
+
+
+@cli.command()
 @click.option('--graph', '-g', type=click.Path(exists=True), help='Path to graph JSON file (supports wildcards)')
 @click.option('--output', '-o', type=click.Path(), default='escagcp_simple_report.html', help='Output HTML file')
 def simple_export(graph, output):
@@ -1598,6 +1681,10 @@ def cleanup(force, dry_run):
         '*.html': 'Generated HTML reports (in root)',
         'escagcp_*.html': 'EscaGCP HTML reports',
         'simple_report.html': 'Simple HTML reports',
+        'frontend/data/': 'Frontend data files',
+        'frontend/dist/data/': 'Frontend distribution data',
+        'frontend/public/data/': 'Frontend public data',
+        '**/escagcp_*.json': 'EscaGCP JSON data files anywhere',
     }
     
     # Find all files and directories to delete
@@ -1612,9 +1699,16 @@ def cleanup(force, dry_run):
                 to_delete.append((dir_path, description, 'directory'))
         else:
             # It's a file pattern
-            for file_path in root_path.glob(pattern):
-                if file_path.is_file():
-                    to_delete.append((file_path, description, 'file'))
+            if pattern.startswith('**/'):
+                # Recursive pattern
+                for file_path in root_path.rglob(pattern[3:]):
+                    if file_path.is_file():
+                        to_delete.append((file_path, description, 'file'))
+            else:
+                # Non-recursive pattern
+                for file_path in root_path.glob(pattern):
+                    if file_path.is_file():
+                        to_delete.append((file_path, description, 'file'))
     
     # Also find all __pycache__ directories recursively
     for pycache in root_path.rglob('__pycache__'):

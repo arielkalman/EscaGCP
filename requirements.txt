@@ -13,4 +13,5 @@ tqdm>=4.60
 pyvis>=0.2.0
 matplotlib>=3.4
 pandas>=1.3
-numpy>=1.21 
+numpy>=1.21
+pytest-timeout>=2.4.0 

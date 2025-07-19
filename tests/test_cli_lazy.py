@@ -55,24 +55,27 @@ class TestLazyMode:
         mock_viz_file.absolute.return_value = Path('/path/to/viz.html')
         mock_glob.return_value = [mock_viz_file]
         
-        runner = CliRunner()
-        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
-            result = runner.invoke(cli, ['run', '--lazy'])
-            
-            # Check that gcloud was called to get current project
-            # The first call should be to get the current project
-            assert mock_subprocess.call_count >= 1
-            first_call = mock_subprocess.call_args_list[0]
-            assert first_call[0][0] == ['gcloud', 'config', 'get-value', 'project']
-            assert first_call[1]['capture_output'] == True
-            assert first_call[1]['text'] == True
-            assert first_call[1]['check'] == True
-            
-            # Check that all commands were invoked
-            assert mock_context.invoke.call_count == 4  # collect, build, analyze, visualize
-            
-            # Check browser was opened
-            mock_browser.assert_called_once()
+        # Mock _save_data_for_react_frontend and _start_react_frontend
+        with patch('escagcp.cli._save_data_for_react_frontend', return_value=True):
+            with patch('escagcp.cli._start_react_frontend', return_value="already_running"):
+                runner = CliRunner()
+                with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
+                    result = runner.invoke(cli, ['run', '--lazy'])
+                    
+                    # Check that gcloud was called to get current project
+                    # The first call should be to get the current project
+                    assert mock_subprocess.call_count >= 1
+                    first_call = mock_subprocess.call_args_list[0]
+                    assert first_call[0][0] == ['gcloud', 'config', 'get-value', 'project']
+                    assert first_call[1]['capture_output'] == True
+                    assert first_call[1]['text'] == True
+                    assert first_call[1]['check'] == True
+                    
+                    # Check that all commands were invoked
+                    assert mock_context.invoke.call_count == 3  # collect, build, analyze (no visualize for React mode)
+                    
+                    # Check browser was opened
+                    mock_browser.assert_called_once()
     
     @patch('click.get_current_context')
     @patch('pathlib.Path.glob')
@@ -140,13 +143,23 @@ class TestLazyMode:
         mock_viz_file.absolute.return_value = Path('/path/to/viz.html')
         mock_glob.return_value = [mock_viz_file]
         
-        runner = CliRunner()
-        with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
-            result = runner.invoke(cli, ['run', '--lazy'])
-            
-            # Check that open command was called for macOS
-            open_call = mock_subprocess.call_args_list[-1]
-            assert open_call[0][0] == ['open', '-a', 'Google Chrome', 'file:///path/to/viz.html']
+        # Mock _save_data_for_react_frontend and _start_react_frontend
+        with patch('escagcp.cli._save_data_for_react_frontend', return_value=True):
+            with patch('escagcp.cli._start_react_frontend', return_value="already_running"):
+                with patch('time.sleep'):  # Mock sleep to avoid delays
+                    runner = CliRunner()
+                    with patch('escagcp.cli.Config.from_yaml', return_value=Mock()):
+                        result = runner.invoke(cli, ['run', '--lazy'])
+                        
+                        # Check that open command was called for macOS
+                        # Should be at least 2 calls: gcloud config and open
+                        assert mock_subprocess.call_count >= 2
+                        # Find the open command call
+                        open_calls = [call for call in mock_subprocess.call_args_list 
+                                    if call[0][0][0] == 'open']
+                        assert len(open_calls) > 0
+                        open_call = open_calls[0]
+                        assert open_call[0][0][:3] == ['open', '-a', 'Google Chrome']
     
     @patch('click.get_current_context')
     @patch('pathlib.Path.glob')

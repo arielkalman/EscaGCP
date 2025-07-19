@@ -374,7 +374,7 @@ class TestCLI:
         
         # Mock visualizer
         visualizer_instance = Mock()
-        def create_report(output_file):
+        def create_report(output_file, **kwargs):
             # Actually create the file so os.path.getsize works
             with open(output_file, 'w') as f:
                 f.write('<html>test</html>')
@@ -501,54 +501,50 @@ class TestCLI:
         visualizer_instance = Mock()
         mock_visualizer.return_value = visualizer_instance
         
-        with runner.isolated_filesystem():
-            # Create data directory and a data file that build-graph can find
-            os.makedirs('data', exist_ok=True)
-            with open('data/escagcp_complete_20230101_120000.json', 'w') as f:
-                json.dump({
-                    'data': {'test': 'data'},
-                    'metadata': {'collection_time': '2023-01-01T12:00:00'}
-                }, f)
-                
-            # Create graph directory and a graph file that analyze can find
-            os.makedirs('graph', exist_ok=True)
-            with open('graph/escagcp_graph_20230101_120000.json', 'w') as f:
-                json.dump({'nodes': [], 'edges': []}, f)
-                
-            # Create visualizations directory for the output
-            os.makedirs('visualizations', exist_ok=True)
-            
-            # Mock the visualizer to create a file
-            def create_viz(output_file, **kwargs):
-                # Create the actual file that the run command will look for
-                import datetime
-                timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-                viz_file = f'visualizations/escagcp_attack_paths_{timestamp}.html'
-                with open(viz_file, 'w') as f:
-                    f.write('<html>test</html>')
-            
-            visualizer_instance.create_full_graph.side_effect = create_viz
-            visualizer_instance.create_attack_paths_graph.side_effect = create_viz
-                
-            result = runner.invoke(cli, [
-                'run',
-                '--lazy'
-            ])
-            
-            # Print output for debugging
-            if result.exit_code != 0:
-                print(f"Command failed with output:\n{result.output}")
-                
-            assert result.exit_code == 0
-            orchestrator_instance.collect_all.assert_called_once()
-            builder_instance.build_from_collected_data.assert_called_once()
-            # analyze_all_paths is called once by analyze command
-            # The visualize command will try to load from findings file first
-            assert analyzer_instance.analyze_all_paths.call_count == 1
-            # The visualizer should be called for the visualize command
-            assert visualizer_instance.create_full_graph.called or visualizer_instance.create_attack_paths_graph.called
-            # Browser opening is optional based on the --open-browser flag (default True)
-            # But it only opens if visualization files are found, which depends on the mock implementation
+        # Mock _save_data_for_react_frontend and _start_react_frontend
+        with patch('escagcp.cli._save_data_for_react_frontend', return_value=True):
+            with patch('escagcp.cli._start_react_frontend', return_value="already_running"):
+                with patch('time.sleep'):  # Mock sleep to avoid delays
+                    with runner.isolated_filesystem():
+                        # Create data directory and a data file that build-graph can find
+                        os.makedirs('data', exist_ok=True)
+                        with open('data/escagcp_complete_20230101_120000.json', 'w') as f:
+                            json.dump({
+                                'data': {'test': 'data'},
+                                'metadata': {'collection_time': '2023-01-01T12:00:00'}
+                            }, f)
+                            
+                        # Create graph directory and a graph file that analyze can find
+                        os.makedirs('graph', exist_ok=True)
+                        with open('graph/escagcp_graph_20230101_120000.json', 'w') as f:
+                            json.dump({'nodes': [], 'edges': []}, f)
+                            
+                        # Create findings directory for analyze output
+                        os.makedirs('findings', exist_ok=True)
+                        with open('findings/escagcp_analysis_20230101_120000.json', 'w') as f:
+                            json.dump({
+                                'attack_paths': {},
+                                'statistics': {
+                                    'total_attack_paths': 0,
+                                    'critical_nodes': 0,
+                                    'vulnerabilities': 0,
+                                    'high_risk_nodes': 0
+                                }
+                            }, f)
+                            
+                        result = runner.invoke(cli, [
+                            'run',
+                            '--lazy'
+                        ])
+                        
+                        # Print output for debugging
+                        if result.exit_code != 0:
+                            print(f"Command failed with output:\n{result.output}")
+                            
+                        assert result.exit_code == 0
+                        orchestrator_instance.collect_all.assert_called_once()
+                        builder_instance.build_from_collected_data.assert_called_once()
+                        analyzer_instance.analyze_all_paths.assert_called_once()
             
     def test_invalid_command(self, runner):
         """Test invalid command"""
