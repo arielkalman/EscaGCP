@@ -123,6 +123,14 @@ class BaseCollector(ABC):
             
             # Yield items from this page
             items = response.get(response_field, [])
+            # Ensure items is a list or iterable; handle None or unexpected types gracefully
+            if items is None:
+                items = []
+            elif not isinstance(items, (list, tuple)):
+                logger.warning(
+                    f"Expected list or tuple for response field '{response_field}', got {type(items).__name__}. Wrapping in list."
+                )
+                items = [items]
             for item in items:
                 yield item
             
@@ -210,17 +218,23 @@ class BaseCollector(ABC):
     def _normalize_identity(self, identity: str) -> str:
         """
         Normalize an identity string to a consistent format
-        
+
         Args:
             identity: Identity string (e.g., user:alice@example.com)
-            
+
         Returns:
             Normalized identity string
+
+        Raises:
+            ValueError: If the identity string is empty or None
         """
+        if not identity or not identity.strip():
+            raise ValueError("Identity string must not be empty")
+
         # Already normalized if it has a prefix
         if ':' in identity:
             return identity
-        
+
         # Determine type and add prefix
         if '@' in identity:
             if identity.endswith('.iam.gserviceaccount.com'):
@@ -229,7 +243,7 @@ class BaseCollector(ABC):
                 return identity
             else:
                 return f"user:{identity}"
-        
+
         # Assume it's a special identity
         return identity
     
