@@ -1,0 +1,394 @@
+You are tasked with a complete UI/UX overhaul and feature enhancement for GCPHound, a graph-based tool for analyzing privilege escalation paths in Google Cloud IAM environments. The goal is to transform the existing dashboard into a modern, enterprise-grade product, similar in quality and feel to top-tier cloud security platforms like Wiz, Orca, or Datadog. This project involves redesigning all visual elements, implementing new interactive panels, and ensuring full functionality through comprehensive testing and a fix-verify loop.
+
+Phase 1: UI/UX Redesign & Core Feature Implementation
+
+🧠 Overall Goals & Philosophy:
+
+Focus Exclusively on UI/UX: Do not modify, refactor, or add any backend logic, graph algorithms, detection mechanisms, or APIs. All existing features and data structures must be preserved.
+
+Modern Enterprise Aesthetic: The redesigned UI must look clean, professional, and intuitive. Employ a consistent design system across all components.
+
+Enhanced User Experience: Improve how users interact with and understand the data presented.
+
+🧱 General Layout & Aesthetic Requirements:
+
+Responsive Design: Implement a responsive, grid-based layout that adapts to various screen sizes.
+
+Visual Style: Emulate the visual style of leading cloud security tools (e.g., Wiz, Datadog, Orca).
+
+UI Elements: Utilize modern UI elements such as cards, badges, rounded borders, and soft shadows.
+
+Color Palette: Implement a cool, consistent color palette. Default to a light theme with soft blues, purples, and greys.
+
+Typography & Spacing: Apply consistent font sizing, weights, and spacing (padding, margins) throughout the application for a cohesive look.
+
+Technology Stack:
+
+React: For all frontend components.
+
+Tailwind CSS: For all styling.
+
+shadcn/ui: For UI components (buttons, modals, drawers, cards, badges, etc.).
+
+Lucide React Icons: For iconography (e.g., search, user, warning, arrows, navigation icons).
+
+recharts: For any charts, graphs, or visual data representations on the dashboard.
+
+No MUI or Chakra UI.
+
+🧭 Navigation System:
+
+Left Sidebar:
+
+Logo & Product Name: Prominently display "GCPHound" and its logo.
+
+Navigation Items: Dashboard, Graph, Findings, Nodes, Edges, Settings.
+
+Active State: Clearly highlight the currently selected navigation item.
+
+Icons: Use Lucide React icons for each navigation item.
+
+Top Navigation Bar:
+
+Project Selector: Dropdown to select the current GCP project context.
+
+Date/Time Filters: Controls to filter data based on time ranges.
+
+User Avatar & Menu: Display user avatar with a dropdown menu (e.g., profile, logout).
+
+Theme Switcher (Optional): Allow users to switch between light and dark themes.
+
+🎯 Specific Page & Component Redesign Requirements:
+
+Dashboard Home (/dashboard):
+
+Layout: Clean, organized overview.
+
+Key Metrics:
+
+Total Nodes (display count, icon, and trend indicator).
+
+Total Edges (display count and icon).
+
+Attack Paths Detected.
+
+High-Risk Identities.
+
+Visuals: Use animated cards or graphs (via recharts or placeholder graphs if data is not immediately available) to present these metrics.
+
+Graph Page:
+
+Core Logic: Maintain all existing graph rendering and interaction logic.
+
+Canvas Panel Redesign:
+
+Graph Legend Panel: A clearly visible panel explaining the color coding or styling for different edge types and node types.
+
+Collapsible Graph Filters Sidebar: Allow users to toggle the visibility of different edge types and node types.
+
+Zoom Controls: Fixed buttons for zoom in, zoom out, and reset view.
+
+Tooltips: On hover over a node or edge, display a tooltip with concise, key details.
+
+Nodes and Edges Views (List/Table Views):
+
+Modals/Panels: Utilize redesigned modals or panels (consistent with shadcn/ui) for displaying detailed information.
+
+Enhanced Layout: Improve the layout for better readability and data density.
+
+Interactivity: Add filter bars, sorting options, and grouping capabilities.
+
+Findings View (New Page):
+
+Purpose: Display detected attack paths.
+
+Layout: A sortable list or table of findings.
+
+Finding Details (for each path):
+
+Path Description: e.g., Origin Node → Intermediate Step(s) → Privileged Identity Escalated To.
+
+Attack Complexity: (e.g., 2-hop, 5-hop).
+
+Risk Level: (e.g., Critical, High, Medium, Low) with a badge.
+
+"View in Graph" Button: To visualize the selected attack path on the graph page.
+
+Settings Panel:
+
+UI: Redesign as a modal or a dedicated page with tabbed navigation.
+
+Tabs:
+
+Theme (if theme switcher is implemented).
+
+Graph Layout (options to customize graph appearance).
+
+Node/Edge Toggles (default visibility settings).
+
+Configuration (e.g., upload config file, export data).
+
+✨ New Interactive Feature Implementation:
+
+Edge Explanation Panel (Triggered on Edge Click):
+
+UI: A slide-in panel from the right side of the screen with a smooth animation and a clear close button (using shadcn/ui Drawer or similar).
+
+Content to Display:
+
+Edge Type Badge: (e.g., CAN_IMPERSONATE_SA, CAN_ADMIN, MEMBER_OF).
+
+Permission: The specific IAM permission that creates this edge (e.g., iam.serviceAccounts.getAccessToken, iam.serviceAccountTokenCreator).
+
+Source and Target Node IDs: Clearly identify the connected nodes.
+
+Resource Scope: The project, folder, or organization where the permission applies.
+
+Discovery Source: How this edge was identified (e.g., IAM Binding, Audit Log, Inference).
+
+Human-Readable Explanation: A clear sentence describing the relationship (e.g., "User 'X' can impersonate Service Account 'Y' via the 'iam.serviceAccountTokenCreator' permission on Project 'Z'.").
+
+Visual Cues: Use icons and badges to visually distinguish permission types and sources.
+
+Navigation Buttons: "Go to Source Node" and "Go to Target Node" buttons that highlight/focus the respective nodes in the graph.
+
+Optional: Link to view this relationship in raw JSON/IAM format.
+
+Node Detail Panel + Activity Feed (Triggered on Node Click):
+
+UI: A slide-in panel from the right (can use a shared SidePanelLayout.tsx with the Edge Explanation Panel) with a smooth animation and a close button.
+
+Content to Display:
+
+Node Identification: Node ID and Node Type (e.g., User, Service Account, Group, Resource, Role).
+
+Assigned Roles: A list of all IAM roles assigned to the node, showing the role and the scope/project of assignment. Allow click-to-expand for long lists.
+
+Risk Level Badge & Tooltip: Display a risk level (e.g., "Critical") with an explanation tooltip (e.g., "This identity can escalate to Project Owner via 2 hops.").
+
+Incoming Edges: A list or summary of nodes/identities that have permissions leading to this node.
+
+Outgoing Edges: A list or summary of targets this node has permissions to.
+
+Activity Feed (If audit log data is available/integrated):
+
+Last activity timestamp.
+
+Recent relevant events (e.g., impersonation events, resource deployments, key creations).
+
+Action Buttons:
+
+"Highlight all paths from this node."
+
+"Export node info as JSON."
+
+🧪 Functional Requirements (Across all redesigned components):
+
+Interactivity: All buttons, toggles, filters, dropdowns, and other interactive elements must be fully functional and trigger the correct actions or UI updates.
+
+Dynamic Updates: Filters and selections must update the views (graph, tables, lists) dynamically without requiring a full page reload.
+
+Modals & Drawers: All modals and side panels (drawers) must open and close smoothly. They should be dismissible via a close button and, where appropriate, by clicking outside the modal/panel. They should not overlap or cause layout issues.
+
+Graph Interactions: All existing graph interactions (zoom, pan, select, hover) must remain intact and functional alongside new features.
+
+Visual Integrity: Ensure no visual glitches. Spacing, padding, scrolling, and overflow must be handled cleanly across all components and screen sizes.
+
+State Management: Ensure that UI state (e.g., selected filters, open panels, current view) is managed correctly and consistently. Inter-component communication should be robust.
+
+Phase 2: Functionality Restoration & Comprehensive Testing
+
+🚨 Your Task: Fix, Test, Verify, Repeat.
+After the initial redesign and feature implementation, it's common for some interactivity to be broken. This phase focuses on restoring all functionality and ensuring the dashboard is production-ready through exhaustive testing.
+
+✅ Core Objective:
+Restore 100% of the intended functionality to all dashboard components, buttons, filters, graph interactions, modals, and navigation elements without altering the new visual design achieved in Phase 1.
+
+🔧 Specific Areas to Fix & Verify:
+
+Button & Event Handlers: Ensure all buttons (e.g., "Share Report", metric card clicks, "View in Graph", panel action buttons) trigger the correct modals, side panels, or actions.
+
+Toggles, Filters, Sorting: All visual controls for filtering, sorting, or toggling views/data must actively update the UI.
+
+Graph Interactions:
+
+Clicking a node must open the Node Details panel.
+
+Clicking an edge must open the Edge Explanation panel.
+
+Zoom controls, path highlighting, and click-to-select functionalities must work flawlessly.
+
+Navigation: All sidebar and top-bar navigation tabs must switch views correctly and update active states.
+
+Layout & State Switching: Fix any broken layout issues during transitions or state changes.
+
+Filter/Search Functionality: All dropdown filters, text input searches, and graph filter panels must update the displayed data in real-time. The graph must respond to these filter changes.
+
+Modal & Drawer Logic: Ensure side panels and modals open/close smoothly, can be dismissed correctly (X button, click outside), and do not overlap or cause z-index issues.
+
+State Persistence & Communication: Selected node/edge state must be correctly shared and reflected between the graph, information panels, and any relevant metrics. Reactive updates must be functional.
+
+⚙️ Technical Notes for Fixing:
+
+Focus on reconnecting event handlers, state management logic (React hooks like useState, useEffect, Context API, or existing state stores), and component communication.
+
+If components were renamed or refactored during the redesign, ensure they are correctly wired up.
+
+Prioritize using shadcn/ui component behaviors where applicable but restore any lost custom logic.
+
+🧪 Part 3: Write and Execute Comprehensive UI/UX Test Suite
+
+🎯 Goal: Create an exhaustive automated UI/UX test suite. Run these tests, diagnose any failures, fix the underlying issues, and repeat until all tests pass and the dashboard is deemed fully functional and production-grade.
+
+🛠️ Testing Framework & Practices:
+
+Tooling: Use Playwright (preferred) or Cypress.
+
+Test Characteristics: Tests must be fast, reliable, and isolated.
+
+Selectors: Use stable selectors (e.g., data-testid, aria-label) rather than brittle class names or DOM structures.
+
+Test Location: Place all tests in a dedicated directory (e.g., /tests/e2e/).
+
+📋 Minimum Test Coverage Requirements:
+
+Navigation:
+
+Verify all sidebar and top-bar tabs navigate to the correct views.
+
+Confirm correct highlighting of the active tab.
+
+Dashboard Metrics:
+
+Verify all metric cards (Total Nodes, Total Edges, Attack Paths) render values (even if mock data).
+
+Test that clicking on metric boxes opens the correct modal or filtered view.
+
+Modals and Drawers:
+
+Test opening and closing of "Total Nodes" and "Total Edges" modals.
+
+Verify Node Detail panel opens on node click and closes correctly (X button, background click if applicable).
+
+Verify Edge Explanation panel opens on edge click and closes correctly.
+
+Graph Interactions:
+
+Confirm clicking a node highlights it and opens its detail panel.
+
+Confirm clicking an edge opens its explanation panel.
+
+Test zoom in/out/reset buttons.
+
+Verify that filtering node/edge types dynamically affects visible elements on the graph.
+
+Test hover tooltips if implemented.
+
+Buttons and General Interactions:
+
+Test "Share Report" button functionality.
+
+Verify all filters, dropdowns, and toggles update the UI as expected.
+
+Ensure search boxes filter results correctly.
+
+Settings Page:
+
+Test theme toggle (if it exists).
+
+Verify graph layout options update the canvas (if applicable).
+
+Error Cases & Empty States:
+
+Test behavior when clicking a potentially broken button (should show an error or be gracefully handled).
+
+Verify safe redirection or handling for invalid tab routes.
+
+Ensure the graph renders an appropriate "empty state" message or doesn't crash when no data is available or all data is filtered out.
+
+🔬 Extended Test Coverage (Strive for Maximum Functionality):
+
+Edge & Boundary Cases:
+
+Click a node with no incoming/outgoing edges (panel should show a "no edges" state).
+
+Open and close 10+ modals/panels rapidly (test for UI hangs or memory leaks).
+
+Filter graph until 0 nodes/edges remain (verify proper empty state message).
+
+Input exceptionally long strings (e.g., 100+ characters) into search bars (check for crashes or UI breaks).
+
+Interact with the graph while a panel is open (verify both UI elements stay in sync and don't interfere).
+
+Regression Tests:
+
+Ensure Node Detail and Edge Explanation panels still update correctly after a UI theme change (if applicable).
+
+Navigate away from and back to the Dashboard page (verify all state resets or persists correctly as intended).
+
+Change tabs multiple times rapidly (check for stale panels, race conditions, or missing state).
+
+Stress & Performance (Simulated):
+
+If possible, test with a larger mock dataset (e.g., 500+ nodes/edges) to gauge render performance and responsiveness.
+
+Apply multiple complex filters simultaneously and check graph/UI response time.
+
+Zoom in/out/drag rapidly on the graph (ensure stability and no visual tearing).
+
+Interaction Consistency:
+
+Pressing the ESC key while a modal or panel is open should close it.
+
+Pressing Enter in a search bar should trigger the search or expected action.
+
+Hovering over interactive elements (nodes, edges, buttons) should show tooltips or highlights without glitches.
+
+Accessibility (A11y) Checks:
+
+Ensure all buttons, controls, and interactive elements have appropriate aria-label or aria-labelledby attributes for screen readers.
+
+Verify logical tab key navigation through all interactive elements on a page.
+
+Confirm keyboard-only users can open/close panels, trigger actions, and navigate the dashboard.
+
+Responsive Behavior:
+
+Simulate tablet viewport (e.g., 768px width) and verify all controls are usable and layout is maintained.
+
+Ensure the graph canvas resizes correctly and maintains aspect ratio/usability on window resize.
+
+Check for proper overflow handling (scrolling) in smaller viewports.
+
+🔁 Auto-Fix Loop Mandate:
+
+Run Full Test Suite: Execute all automated tests.
+
+Diagnose Failures: For each failed test, identify the root cause of the bug (e.g., broken event handler, incorrect state update, CSS issue).
+
+Implement Fix: Correct the code to address the identified issue.
+
+Re-run Test: Re-run the specific failed test (and related tests) to verify the fix.
+
+Iterate: Continue this cycle until all tests in the suite pass.
+
+🏁 Final Instruction & Completion Criteria:
+Do not stop until:
+
+Every screen, modal, sidebar, and UI element is fully redesigned according to the aesthetic and component requirements.
+
+The new Edge Explanation Panel and Node Detail Panel + Activity Feed are implemented and fully functional.
+
+All previously existing and newly implemented interactivity is fully restored and working as expected.
+
+All UI components are visually polished, with no glitches in spacing, padding, scrolling, or overflow.
+
+The graph interactions are stable, responsive, and intuitive.
+
+The entire dashboard is fully functional, robust, and feels like a production-grade application.
+
+Every major UI/UX interaction has corresponding automated test coverage.
+
+All automated tests pass consistently.
+
+Begin the full UI redesign, feature implementation, functionality restoration, and testing process for the GCPHound dashboard now. Focus on writing clean, maintainable, and modern React code.

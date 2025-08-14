@@ -1,0 +1,549 @@
+{
+  "statistics": {
+    "total_nodes": 17,
+    "total_edges": 13,
+    "attack_paths": 4,
+    "high_risk_nodes": 6,
+    "dangerous_roles": 3,
+    "privilege_escalation_paths": 2,
+    "lateral_movement_paths": 1,
+    "critical_nodes": 2,
+    "vulnerabilities": 3
+  },
+  "attack_paths": {
+    "critical": [
+      {
+        "source": {
+          "id": "user:contractor@external.com",
+          "type": "user",
+          "name": "contractor@external.com"
+        },
+        "target": {
+          "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+          "type": "service_account", 
+          "name": "web-app-sa@production-project.iam.gserviceaccount.com"
+        },
+        "path_nodes": [
+          {
+            "id": "user:contractor@external.com",
+            "type": "user",
+            "name": "contractor@external.com"
+          },
+          {
+            "id": "role:roles/iam.serviceAccountTokenCreator",
+            "type": "role",
+            "name": "roles/iam.serviceAccountTokenCreator"
+          },
+          {
+            "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "type": "service_account",
+            "name": "web-app-sa@production-project.iam.gserviceaccount.com"
+          }
+        ],
+        "path_edges": [
+          {
+            "source": "user:contractor@external.com",
+            "target": "role:roles/iam.serviceAccountTokenCreator",
+            "type": "has_role",
+            "properties": {
+              "resource": "projects/production-project",
+              "role": "roles/iam.serviceAccountTokenCreator"
+            }
+          },
+          {
+            "source": "user:contractor@external.com",
+            "target": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "type": "can_impersonate_sa",
+            "properties": {
+              "technique": "Service Account Impersonation",
+              "via_role": "roles/iam.serviceAccountTokenCreator",
+              "permission": "iam.serviceAccounts.getAccessToken",
+              "confidence": 0.95
+            }
+          }
+        ],
+        "risk_score": 0.92,
+        "description": "External contractor can impersonate privileged service account through token creator role",
+        "length": 2,
+        "category": "critical",
+        "visualization_metadata": {
+          "node_metadata": [
+            {
+              "id": "user:contractor@external.com",
+              "x": 100,
+              "y": 100,
+              "color": "#ff5722",
+              "size": 20
+            },
+            {
+              "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+              "x": 300,
+              "y": 100,
+              "color": "#ff1744",
+              "size": 25
+            }
+          ],
+          "escalation_techniques": [
+            {
+              "name": "Service Account Impersonation",
+              "description": "Create access tokens for service account using iam.serviceAccounts.getAccessToken",
+              "impact": "Full access to resources accessible by the service account",
+              "mitigation": "Use IAM conditions to restrict impersonation scope"
+            }
+          ],
+          "permissions_used": [
+            "iam.serviceAccounts.getAccessToken"
+          ],
+          "attack_summary": "External contractor leverages Service Account Token Creator role to impersonate production service account"
+        }
+      }
+    ],
+    "critical_multi_step": [
+      {
+        "source": {
+          "id": "user:alice@example.com",
+          "type": "user",
+          "name": "alice@example.com"
+        },
+        "target": {
+          "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+          "type": "service_account",
+          "name": "web-app-sa@production-project.iam.gserviceaccount.com"
+        },
+        "path_nodes": [
+          {
+            "id": "user:alice@example.com",
+            "type": "user",
+            "name": "alice@example.com"
+          },
+          {
+            "id": "group:developers@example.com",
+            "type": "group",
+            "name": "developers@example.com"
+          },
+          {
+            "id": "role:roles/editor",
+            "type": "role",
+            "name": "roles/editor"
+          },
+          {
+            "id": "instance:web-server-1",
+            "type": "instance",
+            "name": "web-server-1"
+          },
+          {
+            "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "type": "service_account",
+            "name": "web-app-sa@production-project.iam.gserviceaccount.com"
+          }
+        ],
+        "path_edges": [
+          {
+            "source": "user:alice@example.com",
+            "target": "group:developers@example.com",
+            "type": "member_of",
+            "properties": {}
+          },
+          {
+            "source": "group:developers@example.com",
+            "target": "role:roles/editor",
+            "type": "has_role",
+            "properties": {
+              "resource": "projects/production-project",
+              "role": "roles/editor"
+            }
+          },
+          {
+            "source": "user:alice@example.com",
+            "target": "instance:web-server-1",
+            "type": "can_login_to_vm",
+            "properties": {
+              "technique": "VM SSH Access",
+              "via_role": "roles/editor",
+              "permission": "compute.instances.osLogin"
+            }
+          },
+          {
+            "source": "instance:web-server-1",
+            "target": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "type": "runs_as",
+            "properties": {
+              "service_account_privileged": true
+            }
+          }
+        ],
+        "risk_score": 0.85,
+        "description": "Developer can SSH to VM running as privileged service account and access metadata service",
+        "length": 4,
+        "category": "critical_multi_step",
+        "visualization_metadata": {
+          "escalation_techniques": [
+            {
+              "name": "VM-based Service Account Abuse",
+              "description": "SSH to VM and access metadata service to get service account tokens",
+              "impact": "Privilege escalation to service account with Editor role",
+              "mitigation": "Disable metadata service access or use workload identity"
+            }
+          ],
+          "permissions_used": [
+            "compute.instances.osLogin",
+            "metadata.service.access"
+          ],
+          "attack_summary": "Developer uses group membership to gain VM access and escalate to service account"
+        }
+      }
+    ],
+    "privilege_escalation": [
+      {
+        "source": {
+          "id": "user:contractor@external.com",
+          "type": "user",
+          "name": "contractor@external.com"
+        },
+        "target": {
+          "id": "role:roles/editor",
+          "type": "role",
+          "name": "roles/editor"
+        },
+        "path_nodes": [
+          {
+            "id": "user:contractor@external.com",
+            "type": "user",
+            "name": "contractor@external.com"
+          },
+          {
+            "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "type": "service_account",
+            "name": "web-app-sa@production-project.iam.gserviceaccount.com"
+          },
+          {
+            "id": "role:roles/editor",
+            "type": "role",
+            "name": "roles/editor"
+          }
+        ],
+        "path_edges": [
+          {
+            "source": "user:contractor@external.com",
+            "target": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "type": "can_impersonate_sa",
+            "properties": {
+              "technique": "Service Account Impersonation",
+              "confidence": 0.95
+            }
+          },
+          {
+            "source": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "target": "role:roles/editor",
+            "type": "has_role",
+            "properties": {
+              "resource": "projects/production-project",
+              "role": "roles/editor"
+            }
+          }
+        ],
+        "risk_score": 0.88,
+        "description": "External user escalates from token creator to editor via service account impersonation",
+        "length": 2,
+        "category": "privilege_escalation"
+      }
+    ],
+    "lateral_movement": [
+      {
+        "source": {
+          "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+          "type": "service_account",
+          "name": "web-app-sa@production-project.iam.gserviceaccount.com"
+        },
+        "target": {
+          "id": "project:dev-project",
+          "type": "project",
+          "name": "dev-project"
+        },
+        "path_nodes": [
+          {
+            "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "type": "service_account",
+            "name": "web-app-sa@production-project.iam.gserviceaccount.com"
+          },
+          {
+            "id": "folder:web-apps",
+            "type": "folder",
+            "name": "folders/123456789"
+          },
+          {
+            "id": "project:dev-project",
+            "type": "project",
+            "name": "dev-project"
+          }
+        ],
+        "path_edges": [
+          {
+            "source": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+            "target": "folder:web-apps",
+            "type": "has_role",
+            "properties": {
+              "resource": "folders/123456789",
+              "role": "roles/editor",
+              "inherited": true
+            }
+          },
+          {
+            "source": "folder:web-apps",
+            "target": "project:dev-project",
+            "type": "parent_of",
+            "properties": {}
+          }
+        ],
+        "risk_score": 0.65,
+        "description": "Production service account has inherited access to development project",
+        "length": 2,
+        "category": "lateral_movement"
+      }
+    ],
+    "high": [],
+    "medium": [],
+    "low": []
+  },
+  "risk_scores": {
+    "user:contractor@external.com": {
+      "base": 0.7,
+      "centrality": 0.3,
+      "total": 0.85,
+      "factors": [
+        {
+          "type": "external_user",
+          "impact": 0.4,
+          "description": "External domain user with privileged access"
+        },
+        {
+          "type": "dangerous_role",
+          "impact": 0.5,
+          "description": "Has Service Account Token Creator role"
+        }
+      ]
+    },
+    "sa:web-app-sa@production-project.iam.gserviceaccount.com": {
+      "base": 0.8,
+      "centrality": 0.6,
+      "total": 0.92,
+      "factors": [
+        {
+          "type": "dangerous_role", 
+          "impact": 0.6,
+          "description": "Has Editor role on production project"
+        },
+        {
+          "type": "high_privilege",
+          "impact": 0.3,
+          "description": "Used by multiple compute resources"
+        },
+        {
+          "type": "impersonation_target",
+          "impact": 0.4,
+          "description": "Target of privilege escalation attack"
+        }
+      ]
+    },
+    "user:alice@example.com": {
+      "base": 0.5,
+      "centrality": 0.4,
+      "total": 0.65,
+      "factors": [
+        {
+          "type": "group_membership",
+          "impact": 0.3,
+          "description": "Member of privileged group"
+        },
+        {
+          "type": "vm_access",
+          "impact": 0.4,
+          "description": "Can access VMs running privileged service accounts"
+        }
+      ]
+    },
+    "role:roles/editor": {
+      "base": 0.9,
+      "centrality": 0.7,
+      "total": 0.95,
+      "factors": [
+        {
+          "type": "dangerous_role",
+          "impact": 0.8,
+          "description": "Editor role provides extensive write access"
+        },
+        {
+          "type": "widely_assigned",
+          "impact": 0.3,
+          "description": "Assigned to multiple principals"
+        }
+      ]
+    },
+    "role:roles/iam.serviceAccountTokenCreator": {
+      "base": 0.85,
+      "centrality": 0.5,
+      "total": 0.9,
+      "factors": [
+        {
+          "type": "impersonation_role",
+          "impact": 0.8,
+          "description": "Enables service account impersonation"
+        },
+        {
+          "type": "external_assignment",
+          "impact": 0.4,
+          "description": "Assigned to external user"
+        }
+      ]
+    },
+    "instance:web-server-1": {
+      "base": 0.6,
+      "centrality": 0.4,
+      "total": 0.7,
+      "factors": [
+        {
+          "type": "privileged_sa",
+          "impact": 0.5,
+          "description": "Runs with privileged service account"
+        },
+        {
+          "type": "ssh_access",
+          "impact": 0.3,
+          "description": "Accessible via SSH by developers"
+        }
+      ]
+    }
+  },
+  "vulnerabilities": [
+    {
+      "id": "vuln-001",
+      "title": "External User with Service Account Impersonation",
+      "description": "External contractor has roles/iam.serviceAccountTokenCreator role allowing impersonation of production service account",
+      "severity": "CRITICAL",
+      "risk_score": 0.95,
+      "category": "privilege_escalation",
+      "affected_resources": [
+        "user:contractor@external.com",
+        "sa:web-app-sa@production-project.iam.gserviceaccount.com"
+      ],
+      "remediation": [
+        "Remove Service Account Token Creator role from external user",
+        "Use IAM conditions to restrict impersonation scope",
+        "Implement time-based access controls"
+      ],
+      "cve_references": [],
+      "mitre_techniques": ["T1078.004"],
+      "detection_rules": [
+        "Monitor iam.serviceAccounts.getAccessToken calls from external users"
+      ]
+    },
+    {
+      "id": "vuln-002", 
+      "title": "VM-based Service Account Privilege Escalation",
+      "description": "Developers can SSH to VMs and access metadata service to escalate to service account privileges",
+      "severity": "HIGH",
+      "risk_score": 0.78,
+      "category": "privilege_escalation",
+      "affected_resources": [
+        "instance:web-server-1",
+        "sa:web-app-sa@production-project.iam.gserviceaccount.com"
+      ],
+      "remediation": [
+        "Disable metadata service access on VMs",
+        "Implement Workload Identity for GKE workloads",
+        "Use least privilege service accounts"
+      ],
+      "cve_references": [],
+      "mitre_techniques": ["T1552.005"],
+      "detection_rules": [
+        "Monitor metadata service access from VMs",
+        "Alert on service account token usage from compute instances"
+      ]
+    },
+    {
+      "id": "vuln-003",
+      "title": "Overprivileged Service Account",
+      "description": "Production service account has Editor role providing excessive permissions",
+      "severity": "MEDIUM",
+      "risk_score": 0.65,
+      "category": "excessive_permissions",
+      "affected_resources": [
+        "sa:web-app-sa@production-project.iam.gserviceaccount.com"
+      ],
+      "remediation": [
+        "Create custom role with minimal required permissions",
+        "Remove Editor role and assign granular permissions",
+        "Regular review of service account permissions"
+      ],
+      "cve_references": [],
+      "mitre_techniques": ["T1078.004"],
+      "detection_rules": [
+        "Monitor high-privilege role assignments to service accounts"
+      ]
+    }
+  ],
+  "critical_nodes": [
+    {
+      "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+      "type": "service_account",
+      "name": "web-app-sa@production-project.iam.gserviceaccount.com",
+      "risk_score": 0.92,
+      "criticality_factors": [
+        "Target of multiple attack paths",
+        "Has dangerous Editor role",
+        "Used by production workloads"
+      ]
+    },
+    {
+      "id": "user:contractor@external.com",
+      "type": "user",
+      "name": "contractor@external.com",
+      "risk_score": 0.85,
+      "criticality_factors": [
+        "External user with privileged access",
+        "Can impersonate service accounts",
+        "Source of critical attack path"
+      ]
+    }
+  ],
+  "dangerous_roles": [
+    {
+      "role": "roles/editor",
+      "assignees": [
+        "group:developers@example.com",
+        "sa:web-app-sa@production-project.iam.gserviceaccount.com"
+      ],
+      "risk_score": 0.8,
+      "permissions_count": 2847,
+      "reasons": [
+        "Provides extensive write access to resources",
+        "Can modify IAM policies",
+        "Assigned to production service account"
+      ]
+    },
+    {
+      "role": "roles/iam.serviceAccountTokenCreator",
+      "assignees": [
+        "user:contractor@external.com"
+      ],
+      "risk_score": 0.9,
+      "permissions_count": 2,
+      "reasons": [
+        "Enables service account impersonation",
+        "Assigned to external user",
+        "Can escalate privileges"
+      ]
+    },
+    {
+      "role": "roles/owner",
+      "assignees": [],
+      "risk_score": 1.0,
+      "permissions_count": 9999,
+      "reasons": [
+        "Maximum privileges in GCP",
+        "Full control over all resources",
+        "Can modify any IAM policy"
+      ]
+    }
+  ]
+} 

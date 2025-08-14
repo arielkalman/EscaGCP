@@ -1,0 +1,369 @@
+{
+  "nodes": [
+    {
+      "id": "user:alice@example.com",
+      "type": "user",
+      "name": "alice@example.com",
+      "properties": {
+        "email": "alice@example.com",
+        "domain": "example.com",
+        "is_external": false,
+        "groups": ["group:developers@example.com"]
+      }
+    },
+    {
+      "id": "user:contractor@external.com",
+      "type": "user", 
+      "name": "contractor@external.com",
+      "properties": {
+        "email": "contractor@external.com",
+        "domain": "external.com",
+        "is_external": true,
+        "groups": [],
+        "last_seen": "2024-01-15T10:30:00Z"
+      }
+    },
+    {
+      "id": "group:developers@example.com",
+      "type": "group",
+      "name": "developers@example.com",
+      "properties": {
+        "email": "developers@example.com",
+        "display_name": "Developers Group",
+        "description": "Development team members"
+      }
+    },
+    {
+      "id": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+      "type": "service_account",
+      "name": "web-app-sa@production-project.iam.gserviceaccount.com",
+      "properties": {
+        "email": "web-app-sa@production-project.iam.gserviceaccount.com",
+        "project_id": "production-project",
+        "display_name": "Web Application Service Account",
+        "description": "Service account for web application",
+        "is_default": false,
+        "key_count": 2,
+        "disabled": false,
+        "last_used": "2024-01-20T15:45:00Z"
+      }
+    },
+    {
+      "id": "sa:123456789-compute@developer.gserviceaccount.com",
+      "type": "service_account",
+      "name": "123456789-compute@developer.gserviceaccount.com",
+      "properties": {
+        "email": "123456789-compute@developer.gserviceaccount.com",
+        "project_id": "production-project",
+        "display_name": "Compute Engine default service account",
+        "is_default": true,
+        "key_count": 0,
+        "disabled": false
+      }
+    },
+    {
+      "id": "project:production-project",
+      "type": "project",
+      "name": "production-project",
+      "properties": {
+        "project_id": "production-project",
+        "display_name": "Production Web Application",
+        "parent": "folder:web-apps",
+        "state": "ACTIVE",
+        "labels": {
+          "environment": "production",
+          "team": "web-development"
+        },
+        "create_time": "2023-06-15T09:00:00Z"
+      }
+    },
+    {
+      "id": "project:dev-project",
+      "type": "project",
+      "name": "dev-project",
+      "properties": {
+        "project_id": "dev-project",
+        "display_name": "Development Environment",
+        "parent": "folder:web-apps",
+        "state": "ACTIVE",
+        "labels": {
+          "environment": "development",
+          "team": "web-development"
+        },
+        "create_time": "2023-06-15T09:00:00Z"
+      }
+    },
+    {
+      "id": "folder:web-apps",
+      "type": "folder",
+      "name": "folders/123456789",
+      "properties": {
+        "display_name": "Web Applications",
+        "parent": "organization:123456789",
+        "state": "ACTIVE",
+        "create_time": "2023-01-01T00:00:00Z"
+      }
+    },
+    {
+      "id": "organization:123456789",
+      "type": "organization",
+      "name": "organizations/123456789",
+      "properties": {
+        "display_name": "Example Corp",
+        "domain": "example.com",
+        "state": "ACTIVE",
+        "create_time": "2020-01-01T00:00:00Z"
+      }
+    },
+    {
+      "id": "role:roles/owner",
+      "type": "role",
+      "name": "roles/owner",
+      "properties": {
+        "title": "Owner",
+        "description": "Full control of all resources",
+        "is_custom": false,
+        "permissions": [
+          "*"
+        ],
+        "is_dangerous": true,
+        "stage": "GA"
+      }
+    },
+    {
+      "id": "role:roles/editor",
+      "type": "role",
+      "name": "roles/editor",
+      "properties": {
+        "title": "Editor",
+        "description": "Read/write access to all resources",
+        "is_custom": false,
+        "permissions": [
+          "compute.*",
+          "storage.*",
+          "cloudsql.*"
+        ],
+        "is_dangerous": true,
+        "stage": "GA"
+      }
+    },
+    {
+      "id": "role:roles/iam.serviceAccountTokenCreator",
+      "type": "role",
+      "name": "roles/iam.serviceAccountTokenCreator",
+      "properties": {
+        "title": "Service Account Token Creator",
+        "description": "Impersonate service accounts (create OAuth2 access tokens, sign blobs, etc)",
+        "is_custom": false,
+        "permissions": [
+          "iam.serviceAccounts.getAccessToken",
+          "iam.serviceAccounts.implicitDelegation"
+        ],
+        "is_dangerous": true,
+        "stage": "GA"
+      }
+    },
+    {
+      "id": "role:projects/production-project/roles/customDeveloper",
+      "type": "custom_role",
+      "name": "projects/production-project/roles/customDeveloper",
+      "properties": {
+        "title": "Custom Developer Role",
+        "description": "Custom role for developers with specific permissions",
+        "is_custom": true,
+        "permissions": [
+          "compute.instances.get",
+          "compute.instances.list",
+          "storage.objects.get"
+        ],
+        "is_dangerous": false,
+        "stage": "GA"
+      }
+    },
+    {
+      "id": "bucket:prod-app-data",
+      "type": "bucket",
+      "name": "prod-app-data",
+      "properties": {
+        "project_id": "production-project",
+        "location": "US",
+        "storage_class": "STANDARD",
+        "versioning_enabled": true,
+        "encryption": {
+          "type": "GOOGLE_MANAGED"
+        }
+      }
+    },
+    {
+      "id": "instance:web-server-1",
+      "type": "instance",
+      "name": "web-server-1",
+      "properties": {
+        "project_id": "production-project",
+        "zone": "us-central1-a",
+        "machine_type": "e2-medium",
+        "status": "RUNNING",
+        "service_accounts": [
+          {
+            "email": "web-app-sa@production-project.iam.gserviceaccount.com",
+            "scopes": ["https://www.googleapis.com/auth/cloud-platform"]
+          }
+        ],
+        "labels": {
+          "environment": "production",
+          "role": "web-server"
+        }
+      }
+    },
+    {
+      "id": "function:process-uploads",
+      "type": "function",
+      "name": "process-uploads",
+      "properties": {
+        "project_id": "production-project",
+        "location": "us-central1",
+        "runtime": "python39",
+        "service_account_email": "web-app-sa@production-project.iam.gserviceaccount.com",
+        "status": "ACTIVE",
+        "trigger": {
+          "type": "STORAGE",
+          "bucket": "prod-app-data"
+        }
+      }
+    },
+    {
+      "id": "secret:database-password",
+      "type": "secret",
+      "name": "database-password",
+      "properties": {
+        "project_id": "production-project",
+        "labels": {
+          "environment": "production"
+        },
+        "create_time": "2023-08-01T12:00:00Z"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "user:alice@example.com",
+      "target": "group:developers@example.com",
+      "type": "member_of",
+      "properties": {
+        "roles": ["MEMBER"],
+        "create_time": "2023-06-15T09:00:00Z"
+      }
+    },
+    {
+      "source": "group:developers@example.com",
+      "target": "role:roles/editor",
+      "type": "has_role",
+      "properties": {
+        "resource": "projects/production-project",
+        "role": "roles/editor",
+        "inherited": false
+      }
+    },
+    {
+      "source": "user:contractor@external.com",
+      "target": "role:roles/iam.serviceAccountTokenCreator",
+      "type": "has_role",
+      "properties": {
+        "resource": "projects/production-project",
+        "role": "roles/iam.serviceAccountTokenCreator",
+        "inherited": false
+      }
+    },
+    {
+      "source": "user:contractor@external.com",
+      "target": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+      "type": "can_impersonate_sa",
+      "properties": {
+        "technique": "Service Account Impersonation",
+        "via_role": "roles/iam.serviceAccountTokenCreator",
+        "permission": "iam.serviceAccounts.getAccessToken",
+        "resource_scope": "projects/production-project",
+        "confidence": 0.95
+      }
+    },
+    {
+      "source": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+      "target": "role:roles/editor",
+      "type": "has_role",
+      "properties": {
+        "resource": "projects/production-project",
+        "role": "roles/editor",
+        "inherited": false
+      }
+    },
+    {
+      "source": "instance:web-server-1",
+      "target": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+      "type": "runs_as",
+      "properties": {
+        "service_account_privileged": true
+      }
+    },
+    {
+      "source": "function:process-uploads",
+      "target": "sa:web-app-sa@production-project.iam.gserviceaccount.com", 
+      "type": "runs_as",
+      "properties": {
+        "service_account_privileged": true
+      }
+    },
+    {
+      "source": "user:alice@example.com",
+      "target": "instance:web-server-1",
+      "type": "can_login_to_vm",
+      "properties": {
+        "technique": "VM SSH Access",
+        "via_role": "roles/editor",
+        "permission": "compute.instances.osLogin",
+        "vm_runs_as_privileged_sa": true
+      }
+    },
+    {
+      "source": "organization:123456789",
+      "target": "folder:web-apps",
+      "type": "parent_of",
+      "properties": {}
+    },
+    {
+      "source": "folder:web-apps",
+      "target": "project:production-project",
+      "type": "parent_of", 
+      "properties": {}
+    },
+    {
+      "source": "folder:web-apps",
+      "target": "project:dev-project",
+      "type": "parent_of",
+      "properties": {}
+    },
+    {
+      "source": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+      "target": "bucket:prod-app-data",
+      "type": "can_admin",
+      "properties": {
+        "role": "roles/editor"
+      }
+    },
+    {
+      "source": "sa:web-app-sa@production-project.iam.gserviceaccount.com",
+      "target": "secret:database-password",
+      "type": "can_read",
+      "properties": {
+        "role": "roles/editor"
+      }
+    }
+  ],
+  "metadata": {
+    "total_nodes": 17,
+    "total_edges": 13,
+    "collection_time": "2024-01-20T16:00:00Z",
+    "gcp_projects": ["production-project", "dev-project"],
+    "gcp_organization": "123456789",
+    "generator_version": "1.0.0"
+  }
+} 
