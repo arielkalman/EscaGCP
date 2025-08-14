@@ -70,7 +70,7 @@ After running, you'll find:
 - **Analysis results** in `findings/`
 - **Interactive visualization** in `visualizations/`
 
-## Example Output
+## Example output
 
 ```
 $ escagcp run --lazy

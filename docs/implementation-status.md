@@ -182,7 +182,7 @@ frontend/
 - **Error Handling**: Graceful handling of missing or invalid data
 
 ### Future HTTP API Readiness
-- **RESTful Design**: Complete API specification for real-time data access
+- **RESTful Design**: API specification for real-time data access (future)
 - **Authentication**: Bearer token and API key support planned
 - **Versioning**: API versioning strategy with backward compatibility
 - **Pagination**: Cursor-based pagination for large datasets

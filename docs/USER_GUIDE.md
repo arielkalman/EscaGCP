@@ -116,7 +116,7 @@ Analyzes the graph for attack paths and vulnerabilities.
 escagcp analyze --graph graph/escagcp_graph_*.json --format html
 ```
 
-#### `visualize` - Create Visualizations
+#### `visualize` - Create visualizations
 
 ```bash
 escagcp visualize --graph GRAPH_FILE [--output DIR] [--type TYPE]
@@ -199,13 +199,10 @@ Export a standalone HTML report.
 **Options**:
 - `--graph`: Path to graph file
 - `--output`: Output file name
-- `--title`: Report title
 
-**Example**:
+**Example** (Example output file):
 ```bash
-escagcp export --graph graph/*.json \
-  --output security-report.html \
-  --title "Q4 Security Assessment"
+escagcp export --graph graph/escagcp_graph_*.json --output security-report.html
 ```
 
 #### `cleanup` - Clean Generated Files

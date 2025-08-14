@@ -33,9 +33,9 @@ The main Python package containing all the core functionality:
   
 - **`graph/`** - Graph construction and manipulation
   - `builder.py` - Builds NetworkX graph from collected data
-  - `exporter.py` - Exports graph to various formats
+  - `exporter.py` - Exports graph to JSON/GraphML/Neo4j CSV, and Cypher
   - `models.py` - Node and Edge type definitions
-  - `query.py` - Graph querying functionality
+  - `query.py` - Graph querying and simulation functionality
   
 - **`utils/`** - Utility modules
   - `auth.py` - GCP authentication handling

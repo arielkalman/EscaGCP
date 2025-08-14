@@ -76,7 +76,7 @@ escagcp export --graph graph/escagcp_graph_*.json --output escagcp_report.html
 - **[Attack Techniques](docs/ATTACK_TECHNIQUES.md)** - All detected attack paths explained
 - **[Configuration](docs/CONFIGURATION.md)** - Advanced configuration options
 - **[API Reference](docs/reference/API.md)** - Python API documentation
-- **[CLI Reference](docs/reference/CLI.md)** - Command-line interface reference
+- **[CLI Reference](docs/.truth-map.md)** - Commands, flags, and outputs extracted from source
 
 ## Attack techniques
 

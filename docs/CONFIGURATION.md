@@ -12,7 +12,7 @@ escagcp --config config.yaml [command]
 
 ## Default Configuration
 
-If no configuration file is specified, EscaGCP uses these defaults:
+If no configuration file is specified, EscaGCP uses in-code defaults. The example below shows a representative baseline; actual defaults are defined in `escagcp/config/default.yaml` and `escagcp/utils/config.py`.
 
 ```yaml
 # Default configuration
@@ -55,7 +55,7 @@ authentication:
   # Impersonate a service account (optional)
   impersonate_service_account: scanner@project.iam.gserviceaccount.com
   
-  # Scopes (default: cloud-platform)
+  # Scopes (defaults primarily read-only; see default.yaml)
   scopes:
     - https://www.googleapis.com/auth/cloud-platform
 ```
@@ -73,7 +73,7 @@ collection:
   page_size: 500
   
   # Request timeout in seconds
-  timeout_seconds: 300
+  timeout_seconds: 60  # default.yaml
   
   # Number of retry attempts
   retry_attempts: 3
@@ -119,7 +119,7 @@ analysis:
   # Maximum path length to search
   max_path_length: 8
   
-  # Risk score thresholds
+  # Risk score thresholds (code defaults)
   risk_thresholds:
     critical: 0.8
     high: 0.6
@@ -251,7 +251,7 @@ output:
     include_evidence: true
     include_remediation_scripts: true
     
-  # Export formats
+  # Export formats (supported by exporter)
   export_formats:
     - json
     - graphml
@@ -426,17 +426,7 @@ output:
 
 ## Validation
 
-EscaGCP validates configuration on startup. To validate without running:
-
-```bash
-escagcp validate-config --config config.yaml
-```
-
-Common validation errors:
-- Invalid authentication method
-- Missing required fields
-- Invalid threshold values (must be 0-1)
-- Non-existent file paths
+Configuration keys not recognized by the current release are ignored at load time. Prefer keys present in `escagcp/config/default.yaml` and the fields in `escagcp/utils/config.py`.
 
 ## Best Practices
 
