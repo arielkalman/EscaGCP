@@ -188,3 +188,68 @@ docs/_templates/
 attack_path_summary.md
 simple_report.html
 escagcp_report.html 
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+frontend/server.log
+
+# Additional sensitive artifacts
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+*.der
+*.crt
+*.csr
+*.tfstate*
+.npmrc
+.pypirc
+.netrc
+.docker/config.json
+*.sqlite
+*.db
+
+# Security scanning artifacts
+.gitleaks-report.json
+.secrets.baseline
+.trivy-cache/
+.safety-db/
+sarif-results/
+
+# Additional secrets and credentials
+*_rsa
+*_dsa
+*_ed25519
+*_ecdsa
+*.pub
+.vault-token
+.kube/
+kubeconfig
+.aws/
+.gcloud/
+.azure/
+service-account-*.json
+sa-*.json
+gcp-key-*.json
+
+# Backup files that might contain secrets
+*.backup
+*.dump
+*.sql.gz
+*.tar.gz.enc
+
+# IDE and tool configurations that might have secrets
+.idea/workspace.xml
+.idea/dataSources.xml
+.idea/httpRequests/
+.vscode/settings.json
+.eclipse/
+.project
+.classpath
+
+# Temporary and test outputs
+temp_test_files/
+test_output/
+.temp/
