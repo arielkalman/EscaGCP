@@ -9,8 +9,8 @@ from datetime import datetime
 from unittest.mock import Mock, patch, MagicMock
 from googleapiclient.errors import HttpError
 
-from gcphound.collectors.base import BaseCollector
-from gcphound.utils import AuthManager, Config
+from escagcp.collectors.base import BaseCollector
+from escagcp.utils import AuthManager, Config
 
 
 class ConcreteCollector(BaseCollector):
@@ -178,7 +178,7 @@ class TestBaseCollector:
         assert result == {'result': 'success'}
         mock_request.execute.assert_called_once()
     
-    @patch('gcphound.collectors.base.retry_with_backoff')
+    @patch('escagcp.collectors.base.retry_with_backoff')
     def test_execute_request_with_retry(self, mock_retry, collector):
         """Test request execution uses retry decorator"""
         # Mock the decorator to return the original function

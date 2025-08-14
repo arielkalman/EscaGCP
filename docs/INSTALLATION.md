@@ -142,14 +142,14 @@ After installation, verify everything is working:
 
 ```bash
 # Check EscaGCP is installed
-escagcp --version
+python -m escagcp.cli --help
 
 # Verify GCP authentication
 gcloud auth list
 gcloud auth application-default print-access-token
 
-# Test basic functionality
-escagcp collect --projects $(gcloud config get-value project) --dry-run
+# Test basic functionality (requires dependencies installed)
+escagcp collect --projects $(gcloud config get-value project)
 ```
 
 ## Troubleshooting Installation

@@ -18,12 +18,10 @@ Before sharing any EscaGCP output, check for:
 
 ### 2. Data Sanitization
 
-#### Option A: Use Built-in Redaction
+#### Option A: Use the simple report (minimal data)
 ```bash
-# Export with redaction enabled
-escagcp export --graph graph/*.json \
-  --output sanitized-report.html \
-  --redact-sensitive
+# Export a minimal HTML report
+escagcp simple-export --graph graph/escagcp_graph_*.json --output sanitized-report.html
 ```
 
 #### Option B: Manual Redaction

@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page Accessibility @accessibility >> should not have accessibility violations
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:493:3
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:493:3
 
 # Error details
 
@@ -1048,18 +1048,18 @@ Error: expect(received).toEqual(expected) // deep equality
 +     ],
 +   },
 + ]
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:500:49
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:500:49
 ```
 
 # Page snapshot
 
 ```yaml
-- text: Loading GCPHound Dashboard...
+- text: Loading EscaGCP Dashboard...
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

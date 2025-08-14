@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> should handle edge clicks
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:161:3
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:161:3
 
 # Error details
 
@@ -70,17 +70,17 @@ Call log:
   - retrying click action
     - waiting 500ms
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:167:23
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:167:23
 ```
 
 # Page snapshot
 
 ```yaml
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

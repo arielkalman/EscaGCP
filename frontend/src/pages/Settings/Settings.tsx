@@ -39,7 +39,7 @@ export function Settings() {
         <SettingsIcon className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground">Configure your GCPHound dashboard preferences</p>
+          <p className="text-muted-foreground">Configure your EscaGCP dashboard preferences</p>
         </div>
       </div>
 

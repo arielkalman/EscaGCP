@@ -424,8 +424,8 @@ test.describe('Dashboard Page', () => {
       expect(nodeValue).toMatch(/\d+/);
     });
 
-    test('should handle real gcphound data format', async ({ page }) => {
-      // Test with data structure that matches actual gcphound output
+    test('should handle real escagcp data format', async ({ page }) => {
+      // Test with data structure that matches actual escagcp output
       await page.route('**/data/graph/latest.json', route => {
         route.fulfill({
           status: 200,

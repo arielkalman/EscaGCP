@@ -1,5 +1,5 @@
 """
-Shared fixtures and mocks for GCPHound tests
+Shared fixtures and mocks for EscaGCP tests
 """
 
 import pytest
@@ -10,8 +10,8 @@ import json
 from datetime import datetime
 import networkx as nx
 
-from gcphound.utils import Config, AuthManager
-from gcphound.graph.models import Node, Edge, NodeType, EdgeType
+from escagcp.utils import Config, AuthManager
+from escagcp.graph.models import Node, Edge, NodeType, EdgeType
 
 
 @pytest.fixture

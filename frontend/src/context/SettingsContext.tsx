@@ -70,7 +70,7 @@ const loadSettings = (): SettingsState => {
   if (typeof window === 'undefined') return defaultSettings;
   
   try {
-    const stored = localStorage.getItem('gcphound-settings');
+    const stored = localStorage.getItem('escagcp-settings');
     if (stored) {
       const parsed = JSON.parse(stored);
       // Merge with defaults to handle new settings
@@ -88,7 +88,7 @@ const saveSettings = (settings: SettingsState) => {
   if (typeof window === 'undefined') return;
   
   try {
-    localStorage.setItem('gcphound-settings', JSON.stringify(settings));
+    localStorage.setItem('escagcp-settings', JSON.stringify(settings));
   } catch (error) {
     console.warn('Failed to save settings to localStorage:', error);
   }

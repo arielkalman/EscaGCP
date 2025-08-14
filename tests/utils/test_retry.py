@@ -6,7 +6,7 @@ import pytest
 import time
 from unittest.mock import Mock, patch
 from googleapiclient.errors import HttpError
-from gcphound.utils.retry import retry_with_backoff, RateLimiter
+from escagcp.utils.retry import retry_with_backoff, RateLimiter
 
 
 class TestRetryWithBackoff:

@@ -4,9 +4,9 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta
 from googleapiclient.errors import HttpError
-from gcphound.collectors.logs_collector import LogsCollector
-from gcphound.utils.auth import AuthManager
-from gcphound.utils.config import Config
+from escagcp.collectors.logs_collector import LogsCollector
+from escagcp.utils.auth import AuthManager
+from escagcp.utils.config import Config
 
 
 @pytest.fixture

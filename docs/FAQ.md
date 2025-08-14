@@ -205,7 +205,7 @@ Use the search box in the dashboard to filter by:
 
 Yes, use the export command:
 ```bash
-escagcp export --graph graph/*.json --output report.html
+escagcp export --graph graph/escagcp_graph_*.json --output report.html
 ```
 
 ### How do I share reports safely?
@@ -261,8 +261,7 @@ Enable debug logging:
 # Set environment variable
 export ESCAGCP_LOG_LEVEL=DEBUG
 
-# Or use flag
-escagcp --debug collect --projects PROJECT_ID
+# Or increase verbosity in logs; the CLI does not have a global --debug flag.
 ```
 
 ## Security Questions

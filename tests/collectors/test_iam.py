@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock, call
 from googleapiclient.errors import HttpError
 
-from gcphound.collectors.iam import IAMCollector
+from escagcp.collectors.iam import IAMCollector
 
 
 class TestIAMCollector:
@@ -114,7 +114,7 @@ class TestIAMCollector:
         policy = result['policies']['folders']['987654321']
         assert policy['bindings'][0]['role'] == 'roles/resourcemanager.folderAdmin'
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_predefined_roles(self, mock_paginate, collector, mock_services):
         """Test collecting predefined role definitions"""
         collector.auth_manager.build_service.side_effect = lambda service, version: mock_services[service]
@@ -170,7 +170,7 @@ class TestIAMCollector:
         assert owner_role['title'] == 'Owner'
         assert '*' in owner_role['includedPermissions']
     
-    @patch('gcphound.collectors.base.BaseCollector._paginate_list')
+    @patch('escagcp.collectors.base.BaseCollector._paginate_list')
     def test_collect_custom_roles(self, mock_paginate, collector, mock_services):
         """Test collecting custom role definitions"""
         collector.auth_manager.build_service.side_effect = lambda service, version: mock_services[service]

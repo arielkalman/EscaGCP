@@ -8,8 +8,8 @@ from google.auth.exceptions import DefaultCredentialsError, RefreshError
 from googleapiclient.errors import HttpError
 import google.auth
 
-from gcphound.utils.auth import AuthManager
-from gcphound.utils.config import Config
+from escagcp.utils.auth import AuthManager
+from escagcp.utils.config import Config
 
 
 class TestAuthManager:

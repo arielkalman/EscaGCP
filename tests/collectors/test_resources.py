@@ -3,9 +3,9 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from googleapiclient.errors import HttpError
-from gcphound.collectors.resources import ResourceCollector
-from gcphound.utils.auth import AuthManager
-from gcphound.utils.config import Config
+from escagcp.collectors.resources import ResourceCollector
+from escagcp.utils.auth import AuthManager
+from escagcp.utils.config import Config
 
 
 @pytest.fixture

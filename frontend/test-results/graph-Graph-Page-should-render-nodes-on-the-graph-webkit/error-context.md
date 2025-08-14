@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> should render nodes on the graph
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:137:3
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:137:3
 
 # Error details
 
@@ -15,17 +15,17 @@ Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for locator('[data-node-id]').first()
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:146:40
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:146:40
 ```
 
 # Page snapshot
 
 ```yaml
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

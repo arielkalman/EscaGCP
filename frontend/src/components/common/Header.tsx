@@ -66,7 +66,7 @@ export function Header() {
                 <Shield className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <div className="text-xl font-bold">GCPHound</div>
+                <div className="text-xl font-bold">EscaGCP</div>
                 <p className="text-xs text-muted-foreground">Security Dashboard</p>
               </div>
             </Link>

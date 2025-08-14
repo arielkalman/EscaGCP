@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> should handle zoom controls
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:173:3
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:173:3
 
 # Error details
 
@@ -82,17 +82,17 @@ Call log:
   - retrying click action
     - waiting 500ms
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:181:24
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:181:24
 ```
 
 # Page snapshot
 
 ```yaml
 - banner:
-  - link "GCPHound Security Dashboard":
+  - link "EscaGCP Security Dashboard":
     - /url: /
     - img
-    - text: GCPHound
+    - text: EscaGCP
     - paragraph: Security Dashboard
   - navigation:
     - link "Dashboard":

@@ -7,7 +7,7 @@ import yaml
 import tempfile
 from pathlib import Path
 from dataclasses import fields
-from gcphound.utils.config import Config
+from escagcp.utils.config import Config
 
 
 class TestConfig:

@@ -26,7 +26,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [settings, setSettings] = useState<AppSettings>(() => {
     // Try to load settings from localStorage
     try {
-      const savedSettings = localStorage.getItem('gcphound-settings');
+      const savedSettings = localStorage.getItem('escagcp-settings');
       if (savedSettings) {
         return { ...defaultSettings, ...JSON.parse(savedSettings) };
       }
@@ -42,7 +42,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       
       // Save to localStorage
       try {
-        localStorage.setItem('gcphound-settings', JSON.stringify(newSettings));
+        localStorage.setItem('escagcp-settings', JSON.stringify(newSettings));
       } catch (error) {
         console.warn('Failed to save settings to localStorage:', error);
       }

@@ -18,13 +18,13 @@ When running EscaGCP on your own GCP environment, the generated reports will con
 To generate example reports for your environment:
 
 ```bash
-# Generate a full interactive report
-escagcp visualize --graph graph/escagcp_graph_*.json --output example_report.html
+# Generate a full interactive report (HTML visualization)
+escagcp visualize --graph graph/escagcp_graph_*.json --output visualizations/
 
 # Generate a simple standalone report
 escagcp simple-export --graph graph/escagcp_graph_*.json --output simple_report.html
 
-# Generate a shareable report
+# Generate a standalone shareable report
 escagcp export --graph graph/escagcp_graph_*.json --output shareable_report.html
 ```
 

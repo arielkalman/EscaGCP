@@ -19,7 +19,7 @@ type ThemeAction =
 // Initial state
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') return 'system';
-  const stored = localStorage.getItem('gcphound-theme');
+  const stored = localStorage.getItem('escagcp-theme');
   if (stored && ['light', 'dark', 'system'].includes(stored)) {
     return stored as Theme;
   }
@@ -55,7 +55,7 @@ function themeReducer(state: ThemeState, action: ThemeAction): ThemeState {
       };
       
       // Persist to localStorage
-      localStorage.setItem('gcphound-theme', action.payload);
+      localStorage.setItem('escagcp-theme', action.payload);
       
       return newState;
     }

@@ -219,7 +219,7 @@ function GraphContent() {
         // Create download link
         const link = document.createElement('a');
         const timestamp = new Date().toISOString().split('T')[0];
-        link.download = `gcphound-graph-${timestamp}.png`;
+        link.download = `escagcp-graph-${timestamp}.png`;
         
         // Convert canvas to blob and download
         canvas.toBlob((blob) => {
@@ -258,7 +258,7 @@ function GraphContent() {
         
         const link = document.createElement('a');
         const timestamp = new Date().toISOString().split('T')[0];
-        link.download = `gcphound-graph-data-${timestamp}.json`;
+        link.download = `escagcp-graph-data-${timestamp}.json`;
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);

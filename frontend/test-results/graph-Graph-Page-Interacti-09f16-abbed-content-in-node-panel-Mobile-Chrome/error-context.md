@@ -1,7 +1,7 @@
 # Test info
 
 - Name: Graph Page >> Interactive Panels >> should display tabbed content in node panel
-- Location: /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:311:5
+- Location: /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:311:5
 
 # Error details
 
@@ -16,7 +16,7 @@ Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for getByText(/permissions/i)
 
-    at /Users/arielkalman/GCPHound/frontend/e2e/graph.spec.ts:337:52
+    at /Users/arielkalman/EscaGCP/frontend/e2e/graph.spec.ts:337:52
 ```
 
 # Page snapshot

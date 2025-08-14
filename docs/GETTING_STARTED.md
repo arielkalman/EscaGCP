@@ -63,7 +63,7 @@ Convert the collected data into a graph:
 escagcp build-graph --input data/ --output graph/
 ```
 
-Output:
+Example output:
 ```
 Loading data from: data/escagcp_complete_20240315_120000.json
 Building graph...
@@ -81,7 +81,7 @@ Find privilege escalation paths and security issues:
 escagcp analyze --graph graph/escagcp_graph_*.json
 ```
 
-Output:
+Example output:
 ```
 Analysis completed:
   Total attack paths: 12

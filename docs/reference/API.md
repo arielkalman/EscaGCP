@@ -11,7 +11,7 @@ pip install escagcp
 ## Basic Usage
 
 ```python
-from gcphound import EscaGCP
+from escagcp import EscaGCP
 
 # Initialize
 escagcp = EscaGCP()
@@ -406,7 +406,7 @@ class AnalysisError(EscaGCPError):
 ## Example: Complete Analysis
 
 ```python
-from gcphound import (
+from escagcp import (
     EscaGCP, Config, AuthManager, CollectionOrchestrator,
     GraphBuilder, PathAnalyzer, HTMLVisualizer
 )
@@ -447,7 +447,7 @@ visualizer.create_dashboard(
 )
 
 # Export for further analysis
-from gcphound.graph import GraphMLExporter
+from escagcp.graph import GraphMLExporter
 exporter = GraphMLExporter()
 exporter.export(graph, 'escagcp-graph.graphml')
 ```
@@ -457,7 +457,7 @@ exporter.export(graph, 'escagcp-graph.graphml')
 ### Custom Collectors
 
 ```python
-from gcphound.collectors import BaseCollector
+from escagcp.collectors import BaseCollector
 
 class CustomCollector(BaseCollector):
     def collect(self, project_id: str) -> Dict[str, Any]:
@@ -469,7 +469,7 @@ class CustomCollector(BaseCollector):
 ### Custom Analyzers
 
 ```python
-from gcphound.analyzers import BaseAnalyzer
+from escagcp.analyzers import BaseAnalyzer
 
 class CustomAnalyzer(BaseAnalyzer):
     def analyze(self, graph: GCPGraph) -> List[AttackPath]:
@@ -481,7 +481,7 @@ class CustomAnalyzer(BaseAnalyzer):
 ### Custom Edge Types
 
 ```python
-from gcphound.graph import EdgeType
+from escagcp.graph import EdgeType
 
 # Add custom edge type
 EdgeType.CUSTOM_RELATIONSHIP = "custom_relationship"

@@ -42,7 +42,7 @@ curl -H "Authorization: Bearer $(gcloud auth print-access-token --impersonate-se
 - Implement organizational policy constraints
 
 #### 2. Service Account Key Creation (`CAN_CREATE_SERVICE_ACCOUNT_KEY`)
-**Risk Score**: 0.85-0.95
+**Risk Score**: typically high (see risk thresholds in config)
 
 **Description**: Create long-lived service account keys that can be exfiltrated and used indefinitely.
 
@@ -74,7 +74,7 @@ gcloud auth list
 ### 🟠 High Risk Techniques
 
 #### 3. VM-based Service Account Abuse (`CAN_ACT_AS_VIA_VM`)
-**Risk Score**: 0.7-0.85
+**Risk Score**: high (see risk thresholds in config)
 
 **Description**: Deploy or modify VMs that run with a privileged service account's permissions.
 
@@ -106,7 +106,7 @@ curl -H "Metadata-Flavor: Google" \
 - Disable project-wide SSH keys
 
 #### 4. Cloud Function Deployment (`CAN_DEPLOY_FUNCTION_AS`)
-**Risk Score**: 0.75-0.85
+**Risk Score**: high (see risk thresholds in config)
 
 **Description**: Deploy cloud functions that execute with a privileged service account.
 
@@ -146,7 +146,7 @@ gcloud functions deploy exploit \
 - Monitor function deployments
 
 #### 5. Cloud Run Deployment (`CAN_DEPLOY_CLOUD_RUN_AS`)
-**Risk Score**: 0.75-0.85
+**Risk Score**: high (see risk thresholds in config)
 
 **Description**: Deploy Cloud Run services that execute with privileged permissions.
 
@@ -176,7 +176,7 @@ gcloud run deploy malicious-service \
 ### 🟡 Medium Risk Techniques
 
 #### 6. Cloud Build Exploitation (`CAN_TRIGGER_BUILD_AS`)
-**Risk Score**: 0.6-0.75
+**Risk Score**: medium/high (see risk thresholds in config)
 
 **Description**: Trigger builds that run with Cloud Build's default service account (often has Editor role).
 
@@ -209,7 +209,7 @@ steps:
 - Monitor build logs
 
 #### 7. GKE Workload Identity Abuse (`CAN_DEPLOY_GKE_POD_AS`)
-**Risk Score**: 0.65-0.75
+**Risk Score**: high (see risk thresholds in config)
 
 **Description**: Deploy pods that can impersonate GKE workload identity service accounts.
 
@@ -241,7 +241,7 @@ spec:
 - Enable Binary Authorization
 
 #### 8. Tag-Based Privilege Escalation (`CAN_MODIFY_TAG`)
-**Risk Score**: 0.6-0.7
+**Risk Score**: high (see risk thresholds in config)
 
 **Description**: Manipulate resource tags to satisfy IAM conditions and gain elevated privileges.
 
@@ -271,7 +271,7 @@ gcloud projects get-iam-policy PROJECT_ID
 ### 🟢 Lower Risk Techniques
 
 #### 9. SSH Access Combined with Metadata (`CAN_LOGIN_TO_VM`)
-**Risk Score**: 0.4-0.6
+**Risk Score**: medium (see risk thresholds in config)
 
 **Description**: SSH access to VMs can be combined with metadata server access to use attached service accounts.
 
@@ -297,7 +297,7 @@ curl -H "Metadata-Flavor: Google" \
 - Restrict metadata server access
 
 #### 10. Custom Role Manipulation (`CAN_MODIFY_CUSTOM_ROLE`)
-**Risk Score**: 0.5-0.65
+**Risk Score**: high (see risk thresholds in config)
 
 **Description**: Modify custom roles to add dangerous permissions.
 

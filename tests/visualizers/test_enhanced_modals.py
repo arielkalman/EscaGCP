@@ -3,8 +3,8 @@
 import pytest
 import json
 import networkx as nx
-from gcphound.visualizers.html import HTMLVisualizer
-from gcphound.utils import Config
+from escagcp.visualizers.html import HTMLVisualizer
+from escagcp.utils import Config
 
 
 class TestEnhancedModals:

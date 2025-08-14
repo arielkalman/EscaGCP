@@ -14,8 +14,8 @@ escagcp export --output my_report.html
 # Export a specific graph file
 escagcp export --graph graph/escagcp_graph_20250526_134123.json --output report.html
 
-# Export with a custom title
-escagcp export --output security_audit.html --title "Q1 2025 GCP Security Audit"
+# Export a report
+escagcp export --output security_audit.html
 ```
 
 ## What's Included
@@ -63,21 +63,18 @@ When sharing reports, keep in mind:
 
 ### 1. Security Audit Reports
 ```bash
-escagcp export --output "gcp_security_audit_$(date +%Y%m%d).html" \
-  --title "GCP Security Audit - $(date +%B' '%Y)"
+escagcp export --output "gcp_security_audit_$(date +%Y%m%d).html"
 ```
 
 ### 2. Incident Response
 ```bash
 escagcp export --graph graph/incident_*.json \
-  --output incident_report.html \
-  --title "Security Incident Analysis"
+  --output incident_report.html
 ```
 
 ### 3. Compliance Documentation
 ```bash
-escagcp export --output compliance_iam_review.html \
-  --title "IAM Compliance Review"
+escagcp export --output compliance_iam_review.html
 ```
 
 ## Technical Details

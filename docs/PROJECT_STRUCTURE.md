@@ -5,7 +5,7 @@ This document describes the organization and structure of the EscaGCP project.
 
 ## Directory Structure
 
-### Core Package (`gcphound/`)
+### Core Package (`escagcp/`)
 The main Python package containing all the core functionality:
 
 - **`cli.py`** - Command-line interface implementation
@@ -33,9 +33,9 @@ The main Python package containing all the core functionality:
   
 - **`graph/`** - Graph construction and manipulation
   - `builder.py` - Builds NetworkX graph from collected data
-  - `exporter.py` - Exports graph to various formats
+  - `exporter.py` - Exports graph to JSON/GraphML/Neo4j CSV, and Cypher
   - `models.py` - Node and Edge type definitions
-  - `query.py` - Graph querying functionality
+  - `query.py` - Graph querying and simulation functionality
   
 - **`utils/`** - Utility modules
   - `auth.py` - GCP authentication handling
@@ -95,7 +95,7 @@ These directories are created during execution:
 ## Adding New Features
 
 ### Adding a New Collector
-1. Create a new file in `gcphound/collectors/`
+1. Create a new file in `escagcp/collectors/`
 2. Inherit from `BaseCollector`
 3. Implement the `collect()` method
 4. Register in `orchestrator.py`

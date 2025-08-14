@@ -1,13 +1,13 @@
-# GCPHound Frontend Test Plan - Phase 8
+# EscaGCP Frontend Test Plan - Phase 8
 
 ## Overview
 
-This document outlines the comprehensive testing strategy for the GCPHound React frontend, designed to validate UI functionality, data integration with the Python gcphound tool, and ensure production readiness.
+This document outlines the comprehensive testing strategy for the EscaGCP React frontend, designed to validate UI functionality, data integration with the Python escagcp tool, and ensure production readiness.
 
 ## Testing Objectives
 
 ### Primary Goals
-1. **Functional Validation**: Ensure all UI components work correctly with real gcphound data
+1. **Functional Validation**: Ensure all UI components work correctly with real escagcp data
 2. **Integration Testing**: Validate seamless integration with Python backend JSON output
 3. **User Experience**: Verify intuitive user workflows and interactions
 4. **Performance**: Ensure acceptable performance with various data sizes
@@ -19,13 +19,13 @@ This document outlines the comprehensive testing strategy for the GCPHound React
 - Zero accessibility violations on key pages
 - All components handle edge cases gracefully
 - Performance within acceptable thresholds (< 3s initial load, < 100ms interactions)
-- Full compatibility with gcphound JSON data formats
+- Full compatibility with escagcp JSON data formats
 
 ## Test Scope
 
 ### In Scope
 - All React frontend components and pages
-- Data loading and visualization from gcphound JSON files
+- Data loading and visualization from escagcp JSON files
 - Interactive graph features (node/edge selection, panels)
 - Navigation and routing
 - Settings and preferences
@@ -171,7 +171,7 @@ describe('ComponentName', () => {
 
 ## Test Data Strategy
 
-### GCPHound Integration
+### EscaGCP Integration
 
 #### Test Data Manager
 **Location**: `src/test/data/testDataManager.ts` ✅ (Complete)
@@ -184,17 +184,17 @@ describe('ComponentName', () => {
 5. `complex_attack_paths`: Multi-hop escalation scenarios
 6. `empty_data`: No data available
 
-#### Real GCPHound Data Testing
+#### Real EscaGCP Data Testing
 ```bash
-# Generate test data using actual gcphound
-cd /path/to/gcphound
-python -m gcphound collect --projects test-project --output frontend/e2e/test-data/
-python -m gcphound build-graph --input frontend/e2e/test-data/ --output frontend/e2e/test-data/
-python -m gcphound analyze --graph frontend/e2e/test-data/graph.json --output frontend/e2e/test-data/
+# Generate test data using actual escagcp
+cd /path/to/escagcp
+python -m escagcp collect --projects test-project --output frontend/e2e/test-data/
+python -m escagcp build-graph --input frontend/e2e/test-data/ --output frontend/e2e/test-data/
+python -m escagcp analyze --graph frontend/e2e/test-data/graph.json --output frontend/e2e/test-data/
 ```
 
 #### Data Validation Tests
-- Verify frontend can parse all gcphound JSON formats
+- Verify frontend can parse all escagcp JSON formats
 - Test with various project configurations
 - Handle malformed or incomplete data gracefully
 
@@ -219,7 +219,7 @@ npm run test:e2e -- --version
 - `src/test/setup.ts` ✅ (Complete)
 
 ### Mock Services
-- API route interception for gcphound data
+- API route interception for escagcp data
 - localStorage mocking for settings
 - Network request mocking for error scenarios
 
@@ -273,7 +273,7 @@ jobs:
 ### Test Data Management
 1. **Static Test Data**: Committed JSON files for consistent testing
 2. **Generated Test Data**: Created on-demand using test data manager
-3. **Real GCPHound Data**: Periodically updated from actual scans
+3. **Real EscaGCP Data**: Periodically updated from actual scans
 
 ## Performance Testing Strategy
 
@@ -338,7 +338,7 @@ test('should have no accessibility violations', async ({ page }) => {
 1. **Graph Visualization**: Complex vis.js integration
 2. **Large Datasets**: Performance with 1000+ nodes
 3. **Cross-browser**: Compatibility across browsers
-4. **Data Integration**: Handling various gcphound formats
+4. **Data Integration**: Handling various escagcp formats
 
 ### Mitigation Strategies
 1. **Comprehensive Mocking**: Isolated testing of components
@@ -395,7 +395,7 @@ test('should have no accessibility violations', async ({ page }) => {
 ### Week 3: Advanced Testing
 - [ ] Performance testing implementation
 - [ ] Cross-browser compatibility tests
-- [ ] Data integration tests with real gcphound data
+- [ ] Data integration tests with real escagcp data
 - [ ] Error handling and edge case tests
 
 ### Phase 8 Completion Criteria
@@ -407,6 +407,6 @@ test('should have no accessibility violations', async ({ page }) => {
 
 ## Conclusion
 
-This comprehensive test plan ensures the GCPHound frontend meets enterprise standards for reliability, performance, and accessibility. The combination of unit, integration, E2E, and accessibility tests provides confidence in the application's functionality across all user scenarios and data configurations.
+This comprehensive test plan ensures the EscaGCP frontend meets enterprise standards for reliability, performance, and accessibility. The combination of unit, integration, E2E, and accessibility tests provides confidence in the application's functionality across all user scenarios and data configurations.
 
-The test suite is designed to catch regressions early, provide fast feedback to developers, and ensure seamless integration with the existing gcphound Python tool. With this foundation, Phase 9 can focus on execution and refinement of the testing strategy. 
+The test suite is designed to catch regressions early, provide fast feedback to developers, and ensure seamless integration with the existing escagcp Python tool. With this foundation, Phase 9 can focus on execution and refinement of the testing strategy. 
