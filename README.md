@@ -3,9 +3,13 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![GCP](https://img.shields.io/badge/GCP-Security-orange.svg)](https://cloud.google.com/)
 
-**EscaGCP** is a comprehensive graph-based analysis tool for Google Cloud Platform (GCP) that maps IAM relationships and permissions to reveal potential attack paths, similar to BloodHound for Active Directory environments.
+**EscaGCP** maps identities, roles, and resources across Google Cloud to uncover attack paths and risky permissions. It collects data (IAM, identities, resources, logs, Cloud Build, GKE, tags), builds a graph, analyzes for privilege escalation and lateral movement, and presents the results in an interactive dashboard or a standalone HTML report.
 
-## 🚀 Quick Start
+## ⚠️ Disclaimer
+
+This project is for educational and research purposes and was developed with the help of AI tools. It is not production-ready. Review, test, and harden thoroughly before using it in real environments, and use at your own risk.
+
+## Quick Start
 
 ```bash
 # Install
@@ -21,30 +25,50 @@ escagcp analyze --graph graph/escagcp_graph_*.json
 escagcp visualize --graph graph/escagcp_graph_*.json
 ```
 
-## 📸 Screenshots
+By default, `run --lazy` opens the React dashboard. To use the legacy HTML dashboard, add `--use-old-dashboard`. To create a shareable HTML report anytime:
 
-### Interactive Security Dashboard
-![EscaGCP Dashboard Overview](/docs/screenshots/image.png)
-*The main dashboard showing the interactive graph visualization with 137 nodes and 426 edges. The graph displays IAM relationships between users, service accounts, groups, and resources with risk-based coloring.*
+```bash
+escagcp export --graph graph/escagcp_graph_*.json --output escagcp_report.html
+```
+
+## How it works
+
+1. Collect: callers in `escagcp/collectors/` gather IAM policies, service accounts, projects/folders/orgs, Cloud Build, GKE, tags, and (optionally) audit logs
+2. Build: `GraphBuilder` converts the data into a directed graph
+3. Analyze: `PathAnalyzer` finds escalation chains, lateral movement, and critical nodes with risk scoring
+4. Visualize: view in the React dashboard or export a self‑contained HTML report
+
+## Screenshots
+
+### Security Dashboard (Overview)
+![Security Dashboard](/docs/screenshots/dashboard.jpeg)
+*High-level overview with key metrics and quick actions.*
+
+### Graph Visualization
+![Graph Visualization](/docs/screenshots/graph.jpeg)
+*Interactive visualization of IAM relationships with risk-based coloring.*
 
 ### Attack Path Visualization
-![Attack Path Analysis](/docs/screenshots/image%20copy.png)
-*Detailed attack path visualization showing a multi-step privilege escalation chain. The modal displays the attack techniques used, risk scores, and step-by-step exploitation path from a user to a privileged service account.*
+![Attack Path](/docs/screenshots/attack_path.png)
+*Detailed multi-step privilege escalation paths with technique breakdowns and risk scores.*
+
+### Edges Explorer
+![Edges Explorer](/docs/screenshots/edges.png)
+*Tabular view of relationships grouped by source entity with risk scoring and filtering.*
 
 ### Real-time Collection Progress
-![Data Collection Progress](/docs/screenshots/image%20copy%202.png)
-*Live progress view during data collection from GCP, showing the tool gathering IAM policies, service accounts, resources, and audit logs across multiple projects.*
+![Data Collection Progress](/docs/screenshots/terminal.png)
+*Live CLI progress while collecting IAM policies, resources, and audit logs from GCP.*
 
-## 🎯 Key Features
+## Key capabilities
 
-- **🔍 Comprehensive IAM Analysis**: Maps all IAM relationships across your GCP environment
-- **🎯 Attack Path Discovery**: Identifies privilege escalation and lateral movement opportunities
-- **📊 Interactive Visualizations**: Beautiful dashboard with graph visualization
-- **🚨 Risk Scoring**: Calculates risk scores based on permissions and attack paths
-- **🔮 What-If Analysis**: Simulate IAM changes to understand security impact
-- **📤 Shareable Reports**: Generate standalone HTML reports
+- Comprehensive IAM and identity mapping across org/folder/project scopes
+- Attack path discovery (impersonation, key creation, VM/Cloud Run/Functions deploy, Cloud Build, GKE WI, tag-based conditions, and more)
+- Risk scoring for nodes and edges; highlights critical nodes, roles, and confirmed activity from audit logs
+- Interactive React dashboard (with filters, legend, graph controls) or legacy HTML dashboard
+- Shareable, single‑file HTML reports; optional “what‑if” simulations via CLI
 
-## 📚 Documentation
+## Documentation
 
 - **[Installation Guide](docs/INSTALLATION.md)** - Detailed setup instructions
 - **[Getting Started](docs/GETTING_STARTED.md)** - Quick tutorial and basic usage
@@ -54,21 +78,11 @@ escagcp visualize --graph graph/escagcp_graph_*.json
 - **[API Reference](docs/reference/API.md)** - Python API documentation
 - **[CLI Reference](docs/reference/CLI.md)** - Command-line interface reference
 
-## 🛡️ Detected Attack Techniques
+## Attack techniques
 
-EscaGCP detects all known GCP privilege escalation techniques:
+A concise reference of supported techniques is available in the docs. See [Attack Techniques](docs/ATTACK_TECHNIQUES.md).
 
-- **Service Account Impersonation** - Token generation abuse
-- **Service Account Key Creation** - Long-lived credential theft
-- **ActAs Privilege Escalation** - VM/Function/Cloud Run deployment
-- **Cloud Build Exploitation** - CI/CD pipeline abuse
-- **Workload Identity Federation** - External identity mapping
-- **Tag-Based Escalation** - IAM condition bypass
-- **And many more...**
-
-[See full list →](docs/ATTACK_TECHNIQUES.md)
-
-## 📋 Requirements
+## Requirements
 
 - Python 3.8+
 - GCP credentials with appropriate permissions
@@ -76,13 +90,13 @@ EscaGCP detects all known GCP privilege escalation techniques:
 
 [See detailed requirements →](docs/INSTALLATION.md#requirements)
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-## ⚠️ Security Notice
+## Security notice
 
-EscaGCP collects sensitive information about your GCP environment and save it locally. Before sharing outputs, review the [Security Checklist](docs/SECURITY_CHECKLIST.md).
+EscaGCP collects sensitive information about your GCP environment and saves it locally. Review the [Security Checklist](docs/SECURITY_CHECKLIST.md) before sharing any outputs.
 
 ## 🙏 Acknowledgments
 
