@@ -33,10 +33,10 @@ escagcp export --graph graph/escagcp_graph_*.json --output escagcp_report.html
 
 ## How it works
 
-1. Collect: callers in `escagcp/collectors/` gather IAM policies, service accounts, projects/folders/orgs, Cloud Build, GKE, tags, and (optionally) audit logs
-2. Build: `GraphBuilder` converts the data into a directed graph
-3. Analyze: `PathAnalyzer` finds escalation chains, lateral movement, and critical nodes with risk scoring
-4. Visualize: view in the React dashboard or export a self‑contained HTML report
+1. **Collect:** callers in `escagcp/collectors/` gather IAM policies, service accounts, projects/folders/orgs, Cloud Build, GKE, tags, and (optionally) audit logs
+2. **Build:** `GraphBuilder` converts the data into a directed graph
+3. **Analyze:** `PathAnalyzer` finds escalation chains, lateral movement, and critical nodes with risk scoring
+4. **Visualize:** view in the React dashboard or export a self‑contained HTML report
 
 ## Screenshots
 
